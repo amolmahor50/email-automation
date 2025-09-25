@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import LandingLayout from "@/components/landing/LandingLayout";
-import AuthLayout from "./components/authLayout/AuthLayout";
+import LandingLayout from "@/view/landing/LandingLayout";
+import AuthLayout from "@/view/auth/AuthLayout";
 
 export default function App() {
   return (

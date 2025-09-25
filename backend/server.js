@@ -15,8 +15,8 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const templateRoutes = require("./routes/template");
 const emailRoutes = require("./routes/email");
-// const adminRoutes = require('./routes/admin');
-// const paymentRoutes = require('./routes/payment');
+const adminRoutes = require("./routes/admin");
+const paymentRoutes = require("./routes/payment");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -72,8 +72,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", authenticateToken, userRoutes);
 app.use("/api/templates", authenticateToken, templateRoutes);
 app.use("/api/emails", authenticateToken, emailRoutes);
-// app.use('/api/admin', authenticateToken, adminRoutes);
-// app.use('/api/payments', authenticateToken, paymentRoutes);
+app.use("/api/admin", authenticateToken, adminRoutes);
+app.use("/api/payments", authenticateToken, paymentRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

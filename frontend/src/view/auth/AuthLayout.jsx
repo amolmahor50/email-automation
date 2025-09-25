@@ -1,5 +1,5 @@
-import { version } from "@/../package.json";
-import { Mail } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { TypographyH5, TypographyH6 } from "@/components/custom/Typography";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { ForgotPassword } from "./ForgotPassword";
@@ -7,6 +7,9 @@ import { VerifyOtp } from "./VerifyOtp";
 import { PaymentForm } from "./PaymentForm";
 import { PricingPlanes } from "./PricingPlanes";
 import { useAuth } from "@/context/AuthContext";
+import Copyright from "@/sections/Copyright";
+import Version from "@/sections/Version";
+import { APP_LOGO } from "@/app/path";
 
 export default function AuthLayout({ title = "Email Automation." }) {
   const { step } = useAuth();
@@ -31,21 +34,24 @@ export default function AuthLayout({ title = "Email Automation." }) {
   };
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2 bg-gradient-to-br from-blue-950 to-[#009896]">
+    <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left Side */}
-      <div className="flex flex-col gap-4 m-3 rounded-lg bg-white">
+      <div className="flex flex-col gap-4">
         {/* Header / Logo */}
         <div className="flex justify-between items-center border-b p-4">
           <a href="#" className="flex items-center gap-2 font-medium">
-            <div className="bg-primary text-primary-foreground flex w-7 h-7 items-center justify-center rounded-md">
-              <Mail className="w-5 h-5" />
+            <div className="md:w-10 w-8 flex items-center gap-2">
+              <img src={APP_LOGO} alt="logo" />
             </div>
-            {title}
+            <div className="flex flex-col font-bold text-[#006296]">
+              <TypographyH6>Email</TypographyH6>
+              <TypographyH5>Automation</TypographyH5>
+            </div>
           </a>
 
           {/* User Info / Logout */}
           <div className="flex flex-col items-end">
-            <p className="text-sm capitalize">welcome</p>
+            <p className="text-base capitalize">welcome</p>
           </div>
         </div>
 
@@ -56,12 +62,12 @@ export default function AuthLayout({ title = "Email Automation." }) {
       </div>
 
       {/* Right Side */}
-      <div className="relative flex flex-col items-center justify-center p-4 text-white">
+      <div className="relative flex flex-col items-center justify-center p-4 bg-secondary">
         <div className="max-w-lg space-y-6 z-10">
           <h1 className="text-3xl lg:text-4xl font-extrabold leading-tight">
             Email Automation Made Simple
           </h1>
-          <p className="text-blue-100 text-sm lg:text-base leading-relaxed">
+          <p className="text-sm lg:text-base leading-relaxed">
             Streamline your email campaigns with smart templates, bulk sending,
             advanced analytics, and AI-powered writing assistance. Send
             personalized emails faster and track engagement effortlessly.
@@ -97,19 +103,18 @@ export default function AuthLayout({ title = "Email Automation." }) {
                 description: "Manage team access and collaborate seamlessly.",
               },
             ].map((feature, index) => (
-              <div key={index} className="p-4 bg-white/10 p-4 rounded-lg">
+              <Card key={index} className="p-4 gap-0">
                 <h3 className="font-semibold text-lg">{feature.title}</h3>
-                <p className="text-blue-100 text-sm">{feature.description}</p>
-              </div>
+                <p className="text-sm">{feature.description}</p>
+              </Card>
             ))}
           </div>
 
           {/* Footer */}
-          <p className="text-sm lg:text-base leading-relaxed mt-6 z-10 text-center lg:text-left">
-            Copyright © 2024 EmailFlow. All rights reserved.
-            <br />
-            Version: {version}
-          </p>
+          <div>
+            <Copyright />
+            <Version />
+          </div>
         </div>
       </div>
     </div>
