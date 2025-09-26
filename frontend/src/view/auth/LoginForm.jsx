@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
-import { login, getMe } from "@/api/auth";
+import { AuthSteps } from "@/app/enum";
 
 // --- Validation Helper ---
 const validateForm = ({ email, password }) => {
@@ -30,8 +30,7 @@ const validateForm = ({ email, password }) => {
 export function LoginForm() {
   const navigate = useNavigate();
 
-  const { setStep } = useAuth();
-
+  const { setStep, setLoading, loading } = useAuth();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({
     email: "",
@@ -51,29 +50,11 @@ export function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm(formData);
-
     if (validationErrors.email || validationErrors.password) {
       setErrors(validationErrors);
       return;
     }
-
-    try {
-      const data = await login(formData);
-      console.log("Login success:", data);
-
-      const user = await getMe();
-
-      console.log("Current user:", user);
-    } catch (error) {
-      console.error(
-        "Login failed:",
-        error.response?.data?.message || error.message
-      );
-      setErrors((prev) => ({
-        ...prev,
-        general: error.response?.data?.message || "Login failed",
-      }));
-    }
+    console.log("login successfull =>", formData);
   };
 
   return (
@@ -111,7 +92,7 @@ export function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <button
                 type="button"
-                onClick={() => navigate("/forgot-password")}
+                onClick={() => setStep(AuthSteps.FORGOT_PASSWORD)}
                 className="ml-auto text-sm underline-offset-4 hover:underline"
               >
                 Forgot your password?
@@ -158,7 +139,7 @@ export function LoginForm() {
           Don&apos;t have an account?{" "}
           <button
             type="button"
-            onClick={() => navigate("/register")}
+            onClick={() => setStep(AuthSteps.REGISTER)}
             className="underline font-semibold underline-offset-4"
           >
             Register

@@ -1,7 +1,7 @@
-const User = require("../models/User");
-const Email = require("../models/Email");
-const Template = require("../models/Template");
-const Payment = require("../models/Payment");
+const User = require('../models/User');
+const Email = require('../models/Email');
+const Template = require('../models/Template');
+const Payment = require('../models/Payment');
 
 // Get dashboard statistics
 const getDashboardStats = async (req, res) => {
@@ -12,20 +12,20 @@ const getDashboardStats = async (req, res) => {
       totalEmails,
       totalTemplates,
       revenueData,
-      recentUsers,
+      recentUsers
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ isActive: true }),
-      Email.countDocuments({ status: "sent" }),
+      Email.countDocuments({ status: 'sent' }),
       Template.countDocuments({ isActive: true }),
       Payment.aggregate([
-        { $match: { status: "completed" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
+        { $match: { status: 'completed' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
       ]),
-      User.find({ role: "user" })
+      User.find({ role: 'user' })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select("name email subscription.plan isActive createdAt"),
+        .select('name email subscription.plan isActive createdAt')
     ]);
 
     const totalRevenue = revenueData[0]?.total || 0;
@@ -34,13 +34,13 @@ const getDashboardStats = async (req, res) => {
     const monthlyRevenue = await Payment.aggregate([
       {
         $match: {
-          status: "completed",
+          status: 'completed',
           createdAt: {
-            $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          },
-        },
+            $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+          }
+        }
       },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
 
     res.json({
@@ -52,12 +52,12 @@ const getDashboardStats = async (req, res) => {
         totalTemplates,
         totalRevenue,
         monthlyRevenue: monthlyRevenue[0]?.total || 0,
-        recentUsers,
-      },
+        recentUsers
+      }
     });
   } catch (error) {
-    console.error("Get dashboard stats error:", error);
-    res.status(500).json({ message: "Failed to get dashboard statistics" });
+    console.error('Get dashboard stats error:', error);
+    res.status(500).json({ message: 'Failed to get dashboard statistics' });
   }
 };
 
@@ -67,25 +67,25 @@ const getUsers = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-    const sort = req.query.sort || "-createdAt";
+    const sort = req.query.sort || '-createdAt';
 
     // Build query
     const query = {};
     if (req.query.status) {
-      query.isActive = req.query.status === "active";
+      query.isActive = req.query.status === 'active';
     }
     if (req.query.plan) {
-      query["subscription.plan"] = req.query.plan;
+      query['subscription.plan'] = req.query.plan;
     }
     if (req.query.search) {
       query.$or = [
-        { name: { $regex: req.query.search, $options: "i" } },
-        { email: { $regex: req.query.search, $options: "i" } },
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { email: { $regex: req.query.search, $options: 'i' } }
       ];
     }
 
     const users = await User.find(query)
-      .select("-password")
+      .select('-password')
       .sort(sort)
       .skip(skip)
       .limit(limit);
@@ -99,21 +99,21 @@ const getUsers = async (req, res) => {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
-      },
+        pages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
-    console.error("Get users error:", error);
-    res.status(500).json({ message: "Failed to get users" });
+    console.error('Get users error:', error);
+    res.status(500).json({ message: 'Failed to get users' });
   }
 };
 
 // Get single user
 const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Get user's email statistics
@@ -123,11 +123,11 @@ const getUser = async (req, res) => {
         $group: {
           _id: null,
           totalEmails: { $sum: 1 },
-          sentEmails: { $sum: { $cond: [{ $eq: ["$status", "sent"] }, 1, 0] } },
-          totalOpens: { $sum: "$analytics.opens" },
-          totalClicks: { $sum: "$analytics.clicks" },
-        },
-      },
+          sentEmails: { $sum: { $cond: [{ $eq: ['$status', 'sent'] }, 1, 0] } },
+          totalOpens: { $sum: '$analytics.opens' },
+          totalClicks: { $sum: '$analytics.clicks' }
+        }
+      }
     ]);
 
     // Get user's payment history
@@ -143,14 +143,14 @@ const getUser = async (req, res) => {
           totalEmails: 0,
           sentEmails: 0,
           totalOpens: 0,
-          totalClicks: 0,
+          totalClicks: 0
         },
-        recentPayments: payments,
-      },
+        recentPayments: payments
+      }
     });
   } catch (error) {
-    console.error("Get user error:", error);
-    res.status(500).json({ message: "Failed to get user" });
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Failed to get user' });
   }
 };
 
@@ -161,7 +161,7 @@ const updateUser = async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Update fields
@@ -169,7 +169,7 @@ const updateUser = async (req, res) => {
     if (subscription) {
       user.subscription = { ...user.subscription, ...subscription };
     }
-    if (typeof isActive === "boolean") user.isActive = isActive;
+    if (typeof isActive === 'boolean') user.isActive = isActive;
     if (profile) {
       user.profile = { ...user.profile, ...profile };
     }
@@ -178,12 +178,12 @@ const updateUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: "User updated successfully",
-      user: user.toObject(),
+      message: 'User updated successfully',
+      user: user.toObject()
     });
   } catch (error) {
-    console.error("Update user error:", error);
-    res.status(500).json({ message: "Failed to update user" });
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Failed to update user' });
   }
 };
 
@@ -192,7 +192,7 @@ const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Soft delete by deactivating
@@ -201,11 +201,11 @@ const deleteUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: "User deleted successfully",
+      message: 'User deleted successfully'
     });
   } catch (error) {
-    console.error("Delete user error:", error);
-    res.status(500).json({ message: "Failed to delete user" });
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Failed to delete user' });
   }
 };
 
@@ -214,7 +214,7 @@ const suspendUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     user.isActive = false;
@@ -222,11 +222,11 @@ const suspendUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: "User suspended successfully",
+      message: 'User suspended successfully'
     });
   } catch (error) {
-    console.error("Suspend user error:", error);
-    res.status(500).json({ message: "Failed to suspend user" });
+    console.error('Suspend user error:', error);
+    res.status(500).json({ message: 'Failed to suspend user' });
   }
 };
 
@@ -235,7 +235,7 @@ const activateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     user.isActive = true;
@@ -243,11 +243,11 @@ const activateUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: "User activated successfully",
+      message: 'User activated successfully'
     });
   } catch (error) {
-    console.error("Activate user error:", error);
-    res.status(500).json({ message: "Failed to activate user" });
+    console.error('Activate user error:', error);
+    res.status(500).json({ message: 'Failed to activate user' });
   }
 };
 
@@ -255,8 +255,8 @@ const activateUser = async (req, res) => {
 const getRevenueAnalytics = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-
-    const matchQuery = { status: "completed" };
+    
+    const matchQuery = { status: 'completed' };
     if (startDate || endDate) {
       matchQuery.createdAt = {};
       if (startDate) matchQuery.createdAt.$gte = new Date(startDate);
@@ -274,12 +274,12 @@ const getRevenueAnalytics = async (req, res) => {
       success: true,
       analytics: {
         ...analytics[0],
-        monthlyTrend,
-      },
+        monthlyTrend
+      }
     });
   } catch (error) {
-    console.error("Get revenue analytics error:", error);
-    res.status(500).json({ message: "Failed to get revenue analytics" });
+    console.error('Get revenue analytics error:', error);
+    res.status(500).json({ message: 'Failed to get revenue analytics' });
   }
 };
 
@@ -287,7 +287,7 @@ const getRevenueAnalytics = async (req, res) => {
 const getEmailAnalytics = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-
+    
     const matchQuery = {};
     if (startDate || endDate) {
       matchQuery.createdAt = {};
@@ -301,19 +301,13 @@ const getEmailAnalytics = async (req, res) => {
         $group: {
           _id: null,
           totalEmails: { $sum: 1 },
-          sentEmails: { $sum: { $cond: [{ $eq: ["$status", "sent"] }, 1, 0] } },
-          scheduledEmails: {
-            $sum: { $cond: [{ $eq: ["$status", "scheduled"] }, 1, 0] },
-          },
-          failedEmails: {
-            $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] },
-          },
-          totalOpens: { $sum: "$analytics.opens" },
-          totalClicks: { $sum: "$analytics.clicks" },
-          uniqueOpens: {
-            $sum: { $cond: [{ $gt: ["$analytics.opens", 0] }, 1, 0] },
-          },
-        },
+          sentEmails: { $sum: { $cond: [{ $eq: ['$status', 'sent'] }, 1, 0] } },
+          scheduledEmails: { $sum: { $cond: [{ $eq: ['$status', 'scheduled'] }, 1, 0] } },
+          failedEmails: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },
+          totalOpens: { $sum: '$analytics.opens' },
+          totalClicks: { $sum: '$analytics.clicks' },
+          uniqueOpens: { $sum: { $cond: [{ $gt: ['$analytics.opens', 0] }, 1, 0] } }
+        }
       },
       {
         $project: {
@@ -327,24 +321,20 @@ const getEmailAnalytics = async (req, res) => {
           uniqueOpens: 1,
           openRate: {
             $cond: [
-              { $gt: ["$sentEmails", 0] },
-              {
-                $multiply: [{ $divide: ["$uniqueOpens", "$sentEmails"] }, 100],
-              },
-              0,
-            ],
+              { $gt: ['$sentEmails', 0] },
+              { $multiply: [{ $divide: ['$uniqueOpens', '$sentEmails'] }, 100] },
+              0
+            ]
           },
           clickRate: {
             $cond: [
-              { $gt: ["$sentEmails", 0] },
-              {
-                $multiply: [{ $divide: ["$totalClicks", "$sentEmails"] }, 100],
-              },
-              0,
-            ],
-          },
-        },
-      },
+              { $gt: ['$sentEmails', 0] },
+              { $multiply: [{ $divide: ['$totalClicks', '$sentEmails'] }, 100] },
+              0
+            ]
+          }
+        }
+      }
     ]);
 
     res.json({
@@ -358,12 +348,12 @@ const getEmailAnalytics = async (req, res) => {
         totalClicks: 0,
         uniqueOpens: 0,
         openRate: 0,
-        clickRate: 0,
-      },
+        clickRate: 0
+      }
     });
   } catch (error) {
-    console.error("Get email analytics error:", error);
-    res.status(500).json({ message: "Failed to get email analytics" });
+    console.error('Get email analytics error:', error);
+    res.status(500).json({ message: 'Failed to get email analytics' });
   }
 };
 
@@ -376,21 +366,21 @@ const createGlobalTemplate = async (req, res) => {
       title,
       body,
       category,
-      visibility: "global",
+      visibility: 'global',
       ownerId: null,
-      tags: tags || [],
+      tags: tags || []
     });
 
     await template.save();
 
     res.status(201).json({
       success: true,
-      message: "Global template created successfully",
-      template,
+      message: 'Global template created successfully',
+      template
     });
   } catch (error) {
-    console.error("Create global template error:", error);
-    res.status(500).json({ message: "Failed to create global template" });
+    console.error('Create global template error:', error);
+    res.status(500).json({ message: 'Failed to create global template' });
   }
 };
 
@@ -398,14 +388,14 @@ const createGlobalTemplate = async (req, res) => {
 const updateGlobalTemplate = async (req, res) => {
   try {
     const { title, body, category, tags } = req.body;
-
+    
     const template = await Template.findOne({
       _id: req.params.id,
-      visibility: "global",
+      visibility: 'global'
     });
 
     if (!template) {
-      return res.status(404).json({ message: "Global template not found" });
+      return res.status(404).json({ message: 'Global template not found' });
     }
 
     template.title = title || template.title;
@@ -417,12 +407,12 @@ const updateGlobalTemplate = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Global template updated successfully",
-      template,
+      message: 'Global template updated successfully',
+      template
     });
   } catch (error) {
-    console.error("Update global template error:", error);
-    res.status(500).json({ message: "Failed to update global template" });
+    console.error('Update global template error:', error);
+    res.status(500).json({ message: 'Failed to update global template' });
   }
 };
 
@@ -431,11 +421,11 @@ const deleteGlobalTemplate = async (req, res) => {
   try {
     const template = await Template.findOne({
       _id: req.params.id,
-      visibility: "global",
+      visibility: 'global'
     });
 
     if (!template) {
-      return res.status(404).json({ message: "Global template not found" });
+      return res.status(404).json({ message: 'Global template not found' });
     }
 
     template.isActive = false;
@@ -443,11 +433,11 @@ const deleteGlobalTemplate = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Global template deleted successfully",
+      message: 'Global template deleted successfully'
     });
   } catch (error) {
-    console.error("Delete global template error:", error);
-    res.status(500).json({ message: "Failed to delete global template" });
+    console.error('Delete global template error:', error);
+    res.status(500).json({ message: 'Failed to delete global template' });
   }
 };
 
@@ -458,38 +448,38 @@ const getSystemSettings = async (req, res) => {
     // For now, return default settings
     const settings = {
       general: {
-        siteName: "EmailFlow",
-        siteDescription: "Professional Email Automation Platform",
-        supportEmail: "support@emailflow.com",
+        siteName: 'EmailFlow',
+        siteDescription: 'Professional Email Automation Platform',
+        supportEmail: 'support@emailflow.com',
         maxFileSize: 10,
-        allowedFileTypes: "pdf,doc,docx,jpg,png",
-        maintenanceMode: false,
+        allowedFileTypes: 'pdf,doc,docx,jpg,png',
+        maintenanceMode: false
       },
       email: {
-        smtpHost: process.env.SMTP_HOST || "smtp.gmail.com",
+        smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
         smtpPort: process.env.SMTP_PORT || 587,
-        smtpUser: process.env.SMTP_USER || "",
-        fromName: process.env.FROM_NAME || "EmailFlow",
-        fromEmail: process.env.FROM_EMAIL || "",
+        smtpUser: process.env.SMTP_USER || '',
+        fromName: process.env.FROM_NAME || 'EmailFlow',
+        fromEmail: process.env.FROM_EMAIL || '',
         dailyLimit: 10000,
-        enableTracking: true,
+        enableTracking: true
       },
       limits: {
         freeEmailLimit: 50,
         proEmailLimit: 500,
         businessEmailLimit: 5000,
         maxTemplatesPerUser: 50,
-        maxAttachmentSize: 25,
-      },
+        maxAttachmentSize: 25
+      }
     };
 
     res.json({
       success: true,
-      settings,
+      settings
     });
   } catch (error) {
-    console.error("Get system settings error:", error);
-    res.status(500).json({ message: "Failed to get system settings" });
+    console.error('Get system settings error:', error);
+    res.status(500).json({ message: 'Failed to get system settings' });
   }
 };
 
@@ -497,18 +487,18 @@ const getSystemSettings = async (req, res) => {
 const updateSystemSettings = async (req, res) => {
   try {
     const settings = req.body;
-
+    
     // In a real application, you would save these to a database
     // For now, just return success
-
+    
     res.json({
       success: true,
-      message: "System settings updated successfully",
-      settings,
+      message: 'System settings updated successfully',
+      settings
     });
   } catch (error) {
-    console.error("Update system settings error:", error);
-    res.status(500).json({ message: "Failed to update system settings" });
+    console.error('Update system settings error:', error);
+    res.status(500).json({ message: 'Failed to update system settings' });
   }
 };
 
@@ -517,26 +507,26 @@ const getSystemLogs = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
-
+    
     // This would typically come from a logs collection or file system
     // For now, return mock data
     const logs = [
       {
-        id: "1",
-        level: "info",
-        message: "User login successful",
+        id: '1',
+        level: 'info',
+        message: 'User login successful',
         timestamp: new Date(),
-        userId: "user123",
-        ip: "192.168.1.1",
+        userId: 'user123',
+        ip: '192.168.1.1'
       },
       {
-        id: "2",
-        level: "error",
-        message: "Email sending failed",
+        id: '2',
+        level: 'error',
+        message: 'Email sending failed',
         timestamp: new Date(Date.now() - 3600000),
-        userId: "user456",
-        ip: "192.168.1.2",
-      },
+        userId: 'user456',
+        ip: '192.168.1.2'
+      }
     ];
 
     res.json({
@@ -546,12 +536,12 @@ const getSystemLogs = async (req, res) => {
         page,
         limit,
         total: logs.length,
-        pages: Math.ceil(logs.length / limit),
-      },
+        pages: Math.ceil(logs.length / limit)
+      }
     });
   } catch (error) {
-    console.error("Get system logs error:", error);
-    res.status(500).json({ message: "Failed to get system logs" });
+    console.error('Get system logs error:', error);
+    res.status(500).json({ message: 'Failed to get system logs' });
   }
 };
 
@@ -570,5 +560,5 @@ module.exports = {
   deleteGlobalTemplate,
   getSystemSettings,
   updateSystemSettings,
-  getSystemLogs,
+  getSystemLogs
 };

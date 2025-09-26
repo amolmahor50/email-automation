@@ -1,16 +1,13 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { forgotPassword } from "@/api/auth";
+import { AuthSteps } from "@/app/enum";
 
 export function ForgotPassword() {
-  const navigate = useNavigate();
-
-  const { setLoading, loading } = useAuth();
+  const { setLoading, loading, setStep } = useAuth();
 
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -20,17 +17,7 @@ export function ForgotPassword() {
     e.preventDefault();
     setMessage("");
     setLoading(true);
-
-    try {
-      const res = await forgotPassword(email);
-      setMessage(res.message || "Password reset email sent ✅");
-    } catch (error) {
-      setMessage(
-        error.response?.data?.message || "Failed to send reset email ❌"
-      );
-    } finally {
-      setLoading(false);
-    }
+    console.log("forgot password =>", email);
   };
 
   return (
@@ -58,7 +45,7 @@ export function ForgotPassword() {
       <Button
         variant="outline"
         className="mt-6 w-full"
-        onClick={() => navigate("login")}
+        onClick={() => setStep(AuthSteps.LOGIN)}
       >
         <ArrowLeft className="mr-2" />
         Back

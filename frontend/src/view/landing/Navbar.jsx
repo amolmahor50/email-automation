@@ -70,7 +70,7 @@ export default function Navbar() {
 
         {/* Desktop Login Button */}
         <div className="hidden md:block">
-          <Link to="/login">
+          <Link to="/auth">
             <Button>Login</Button>
           </Link>
         </div>

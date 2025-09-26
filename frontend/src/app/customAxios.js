@@ -11,7 +11,9 @@ export const API = axios.create({
 
 // Interceptor to attach token
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("congnitoIdentity") ||
+    localStorage.getItem("congnitoIndentityRegister");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

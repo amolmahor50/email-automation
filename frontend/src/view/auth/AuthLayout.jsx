@@ -1,12 +1,42 @@
 import { Card } from "@/components/ui/card";
 import { TypographyH5, TypographyH6 } from "@/components/custom/Typography";
+import { LoginForm } from "./LoginForm";
+import { RegisterForm } from "./RegisterForm";
+import { ForgotPassword } from "./ForgotPassword";
+import { VerifyOtp } from "./VerifyOtp";
+import { PaymentForm } from "./PaymentForm";
+import { PricingPlanes } from "./PricingPlanes";
 import { useAuth } from "@/context/AuthContext";
 import Copyright from "@/sections/Copyright";
 import Version from "@/sections/Version";
 import { APP_LOGO } from "@/app/path";
-import { Outlet } from "react-router-dom";
+import { AuthSteps, AuthLocalStorage } from "@/app/enum";
 
 export default function AuthLayout() {
+  const { step, logout } = useAuth();
+
+  // Show logout if user has token or pending registration
+  const showLogout = !!localStorage.getItem(AuthLocalStorage.DONE_REGISTER);
+
+  const renderStep = () => {
+    switch (step) {
+      case AuthSteps.LOGIN:
+        return <LoginForm />;
+      case AuthSteps.REGISTER:
+        return <RegisterForm />;
+      case AuthSteps.VERIFY_OTP:
+        return <VerifyOtp />;
+      case AuthSteps.PRICING_PLANES:
+        return <PricingPlanes />;
+      case AuthSteps.PAYMENT:
+        return <PaymentForm />;
+      case AuthSteps.FORGOT_PASSWORD:
+        return <ForgotPassword />;
+      default:
+        return <LoginForm />;
+    }
+  };
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left Side */}
@@ -26,14 +56,17 @@ export default function AuthLayout() {
           {/* User Info / Logout */}
           <div className="flex flex-col items-end">
             <p className="text-base capitalize">welcome</p>
+            {showLogout && (
+              <button onClick={logout} className="text-red-500 text-sm mt-1">
+                Logout
+              </button>
+            )}
           </div>
         </div>
 
         {/* Form Container */}
         <div className="flex flex-1 p-6">
-          <div className="w-full max-w-2xl mx-auto">
-            <Outlet />
-          </div>
+          <div className="w-full max-w-2xl mx-auto">{renderStep()}</div>
         </div>
       </div>
 

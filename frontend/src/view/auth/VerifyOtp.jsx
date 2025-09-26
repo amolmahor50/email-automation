@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { AuthSteps } from "@/app/enum";
 
 export function VerifyOtp() {
-  const { setStep } = useAuth();
+  const { setStep, loading, setLoading, sendOtpEmail } = useAuth();
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef([]);
 
@@ -26,8 +27,26 @@ export function VerifyOtp() {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const otpString = otp.join("");
+    if (otpString.length < 6) {
+      alert("Please enter the full 6-digit OTP");
+      return;
+    }
+
+    console.log("otp send successfull");
+  };
+
+  const handleResend = async () => {
+    console.log("resend otp");
+  };
+
   return (
-    <form className="w-full max-w-sm lg:mt-20 mx-auto flex flex-col items-center space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-sm lg:mt-16 mx-auto flex flex-col items-center space-y-6"
+    >
       <div className="text-4xl text-blue-500">📩</div>
       <h2 className="sm:text-3xl text-2xl font-semibold tracking-tight mb-1">
         Verify your Email
@@ -35,7 +54,7 @@ export function VerifyOtp() {
       <p className="text-muted-foreground text-sm text-center">
         Enter the 6-digit verification code sent to your email.
         <br />
-        <span className="font-semibold">amolmahor50@gmail.com</span>
+        <span className="font-semibold">{sendOtpEmail}</span>
       </p>
 
       <div className="flex space-x-2">
@@ -53,24 +72,25 @@ export function VerifyOtp() {
         ))}
       </div>
 
-      <Button className="w-full" type="submit">
-        Verify
+      <Button className="w-full" type="submit" disabled={loading}>
+        {loading ? "Verifying..." : "Verify"}
       </Button>
 
-      <div className="grid grid-cols-2 gap-4 w-full">
+      <div className="grid gap-4 w-full">
         <Button
           type="button"
           onClick={handleResend}
-          variant="outline"
+          variant="secondary"
           className="w-full"
+          disabled={loading}
         >
           Resend
         </Button>
         <Button
-          variant="secondary"
+          variant="destructive"
           className="w-full"
           type="button"
-          onClick={() => setStep("register")}
+          onClick={() => setStep(AuthSteps.REGISTER)}
         >
           Cancel
         </Button>

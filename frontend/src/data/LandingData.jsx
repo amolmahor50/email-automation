@@ -83,7 +83,7 @@ export const pricing = {
       period: "mo",
       description: "Best for businesses and agencies",
       featuresID: [3, 6, 7, 8, 9, 10, 11, 12, 13],
-      cta: "Contact Sales",
+      cta: "Start Bussiness",
       popular: false,
     },
   ],

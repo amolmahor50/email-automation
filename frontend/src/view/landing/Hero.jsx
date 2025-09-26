@@ -23,7 +23,7 @@ export default function Hero() {
           personalized emails faster and track engagement effortlessly.
         </TypographyBlockquote>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/login">
+          <Link to="/auth">
             <Button size="lg" className="py-6 w-full rounded-full">
               Start Free Trial
               <LogIn />
