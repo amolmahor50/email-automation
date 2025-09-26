@@ -1,38 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { TypographyH5, TypographyH6 } from "@/components/custom/Typography";
-import { LoginForm } from "./LoginForm";
-import { RegisterForm } from "./RegisterForm";
-import { ForgotPassword } from "./ForgotPassword";
-import { VerifyOtp } from "./VerifyOtp";
-import { PaymentForm } from "./PaymentForm";
-import { PricingPlanes } from "./PricingPlanes";
 import { useAuth } from "@/context/AuthContext";
 import Copyright from "@/sections/Copyright";
 import Version from "@/sections/Version";
 import { APP_LOGO } from "@/app/path";
+import { Outlet } from "react-router-dom";
 
-export default function AuthLayout({ title = "Email Automation." }) {
-  const { step } = useAuth();
-
-  const renderStep = () => {
-    switch (step) {
-      case "login":
-        return <LoginForm />;
-      case "register":
-        return <RegisterForm />;
-      case "forgot-password":
-        return <ForgotPassword />;
-      case "verifyOtp":
-        return <VerifyOtp />;
-      case "pricingPlanes":
-        return <PricingPlanes />;
-      case "payment":
-        return <PaymentForm />;
-      default:
-        return <LoginForm />;
-    }
-  };
-
+export default function AuthLayout() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left Side */}
@@ -57,7 +31,9 @@ export default function AuthLayout({ title = "Email Automation." }) {
 
         {/* Form Container */}
         <div className="flex flex-1 p-6">
-          <div className="w-full max-w-2xl mx-auto">{renderStep()}</div>
+          <div className="w-full max-w-2xl mx-auto">
+            <Outlet />
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,4 @@
-"use client";
-
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
+import { login, getMe } from "@/api/auth";
 
 // --- Validation Helper ---
 const validateForm = ({ email, password }) => {
@@ -28,7 +28,10 @@ const validateForm = ({ email, password }) => {
 };
 
 export function LoginForm() {
+  const navigate = useNavigate();
+
   const { setStep } = useAuth();
+
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({
     email: "",
@@ -45,7 +48,7 @@ export function LoginForm() {
   };
 
   // --- Handle Submit ---
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm(formData);
 
@@ -54,13 +57,30 @@ export function LoginForm() {
       return;
     }
 
-    // TODO: Call API or auth logic here
-    console.log("Login submitted ✅", formData);
+    try {
+      const data = await login(formData);
+      console.log("Login success:", data);
+
+      const user = await getMe();
+
+      console.log("Current user:", user);
+    } catch (error) {
+      console.error(
+        "Login failed:",
+        error.response?.data?.message || error.message
+      );
+      setErrors((prev) => ({
+        ...prev,
+        general: error.response?.data?.message || "Login failed",
+      }));
+    }
   };
 
   return (
     <div className={cn("flex flex-col md:mt-14 max-w-sm mx-auto")}>
-      <h1 className="text-2xl text-center font-bold mb-6">Login to your account</h1>
+      <h1 className="text-2xl text-center font-bold mb-6">
+        Login to your account
+      </h1>
 
       {/* Social Auth */}
       <AuthSocial />
@@ -91,7 +111,7 @@ export function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <button
                 type="button"
-                onClick={() => setStep("forgot-password")}
+                onClick={() => navigate("/forgot-password")}
                 className="ml-auto text-sm underline-offset-4 hover:underline"
               >
                 Forgot your password?
@@ -138,7 +158,7 @@ export function LoginForm() {
           Don&apos;t have an account?{" "}
           <button
             type="button"
-            onClick={() => setStep("register")}
+            onClick={() => navigate("/register")}
             className="underline font-semibold underline-offset-4"
           >
             Register

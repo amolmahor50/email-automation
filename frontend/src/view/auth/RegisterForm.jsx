@@ -1,5 +1,4 @@
-"use client";
-
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,12 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
+import { register } from "../../api/auth";
 
 // --- Validation Helper ---
 const validateForm = (values) => {
   const errors = {
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     password: "",
     confPassword: "",
@@ -22,8 +21,7 @@ const validateForm = (values) => {
     general: "",
   };
 
-  if (!values.firstName.trim()) errors.firstName = "First name is required";
-  if (!values.lastName.trim()) errors.lastName = "Last name is required";
+  if (!values.name.trim()) errors.name = "First name is required";
 
   if (!values.email.trim()) {
     errors.email = "Email is required";
@@ -54,11 +52,12 @@ const validateForm = (values) => {
 };
 
 export function RegisterForm() {
-  const { setStep } = useAuth();
+  const { setStep, loading, setLoading } = useAuth();
+
+  const navigate = useNavigate();
 
   const [values, setValues] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     password: "",
     confPassword: "",
@@ -66,7 +65,7 @@ export function RegisterForm() {
   });
 
   const [errors, setErrors] = useState({
-    firstName: "",
+    name: "",
     lastName: "",
     email: "",
     password: "",
@@ -89,7 +88,7 @@ export function RegisterForm() {
   };
 
   // --- Submit ---
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm(values);
 
@@ -100,8 +99,27 @@ export function RegisterForm() {
       return;
     }
 
-    console.log("Registration submitted ✅", values);
-    // TODO: API call here
+    setLoading(true);
+
+    const formData = {
+      name: values?.name,
+      email: values?.email,
+      password: values?.password,
+    };
+
+    try {
+      const res = await register(formData);
+      // setMessage(res.message || "Registration successful!");
+      console.log("User registered:", res);
+    } catch (error) {
+      console.error("Register error:", error);
+      // setMessage(
+      //   error.response?.data?.message ||
+      //     "Registration failed. Please try again."
+      // );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -115,42 +133,22 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit} noValidate>
         <div className="grid gap-4">
           {/* Name fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* First Name */}
-            <div className="grid gap-1">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={values.firstName}
-                onChange={handleChange}
-                aria-invalid={!!errors.firstName}
-                aria-describedby="firstName-error"
-              />
-              {errors.firstName && (
-                <p id="firstName-error" className="text-red-500 text-sm">
-                  {errors.firstName}
-                </p>
-              )}
-            </div>
-
-            {/* Last Name */}
-            <div className="grid gap-1">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={values.lastName}
-                onChange={handleChange}
-                aria-invalid={!!errors.lastName}
-                aria-describedby="lastName-error"
-              />
-              {errors.lastName && (
-                <p id="lastName-error" className="text-red-500 text-sm">
-                  {errors.lastName}
-                </p>
-              )}
-            </div>
+          {/* First Name */}
+          <div className="grid gap-1">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={values.name}
+              onChange={handleChange}
+              aria-invalid={!!errors.name}
+              aria-describedby="name-error"
+            />
+            {errors.name && (
+              <p id="name-error" className="text-red-500 text-sm">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           {/* Email */}
@@ -263,7 +261,7 @@ export function RegisterForm() {
           <button
             type="button"
             className="underline underline-offset-4 font-semibold"
-            onClick={() => setStep("login")}
+            onClick={() => navigate("login")}
           >
             Login
           </button>

@@ -70,7 +70,9 @@ export default function Navbar() {
 
         {/* Desktop Login Button */}
         <div className="hidden md:block">
-          <Button onClick={() => navigate("/login")}>Login</Button>
+          <Link to="/login">
+            <Button>Login</Button>
+          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -103,7 +105,7 @@ export default function Navbar() {
           </Link>
           <Button
             onClick={() => {
-              navigate("/login");
+              navigate("/auth");
               setMobileOpen(false);
             }}
           >

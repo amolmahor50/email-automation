@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   TypographyBlockquote,
@@ -8,8 +8,6 @@ import PageLayout from "@/components/custom/PageLayout";
 import { ExternalLink, LogIn } from "lucide-react";
 
 export default function Hero() {
-  const navigate = useNavigate();
-
   return (
     <section className="bg-gray-50">
       <PageLayout className="mt-16 md:mt-20 py-24 space-y-8">
@@ -25,14 +23,12 @@ export default function Hero() {
           personalized emails faster and track engagement effortlessly.
         </TypographyBlockquote>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            size="lg"
-            className="py-6 rounded-full"
-            onClick={() => navigate("/login")}
-          >
-            Start Free Trial
-            <LogIn />
-          </Button>
+          <Link to="/login">
+            <Button size="lg" className="py-6 w-full rounded-full">
+              Start Free Trial
+              <LogIn />
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="lg"
