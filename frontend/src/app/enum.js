@@ -9,8 +9,8 @@ export const AuthSteps = Object.freeze({
 });
 
 export const AuthLocalStorage = Object.freeze({
-  TOKEN: "congnitoIdentity",
-  DONE_REGISTER: "congnitoIndentityRegister",
+  TOKEN: "token",
+  USER_REGISTER: "user",
   PRICING_COMPLETED: "pricingCompleted",
   PAYMENT_SUCCESS: "paymentSuccess",
 });

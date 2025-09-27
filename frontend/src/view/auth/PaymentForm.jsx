@@ -14,7 +14,7 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function PaymentForm() {
   const { setStep, selectedPlan, logout, localStorageSet } = useAuth();

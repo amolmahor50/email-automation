@@ -14,7 +14,7 @@ import {
 } from "@/data/LandingData";
 import { TypographyH1, TypographyLead } from "@/components/custom/Typography";
 
-export default function LandingLayout() {
+export default function Landing() {
   return (
     <div className="min-h-screen">
       <Navbar />

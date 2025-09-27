@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/custom/PageLayout";
-import { TypographyH3, TypographyH6 } from "@/components/custom/Typography";
 import { HiMenu, HiX } from "react-icons/hi";
 import { TbExternalLinkOff } from "react-icons/tb";
-import { APP_LOGO } from "@/app/path";
+import { Logo } from "@/sections/Logo";
 
 const links = ["Home", "Features", "Pricing", "Reviews"];
 
@@ -40,13 +39,7 @@ export default function Navbar() {
     >
       <PageLayout className="flex justify-between h-18 md:h-24 items-center">
         {/* Logo */}
-        <div className="md:w-12 w-10 flex items-center gap-2">
-          <img src={APP_LOGO} alt="logo" />
-          <div className="flex flex-col font-bold text-[#006296]">
-            <TypographyH6>Email</TypographyH6>
-            <TypographyH3>Automation</TypographyH3>
-          </div>
-        </div>
+        <Logo />
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-2 bg-[#ebeef2] rounded-full">

@@ -1,13 +1,13 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
 import { AuthSteps } from "@/app/enum";
+import { toast } from "react-hot-toast";
 
 // --- Validation Helper ---
 const validateForm = ({ email, password }) => {
@@ -28,9 +28,7 @@ const validateForm = ({ email, password }) => {
 };
 
 export function LoginForm() {
-  const navigate = useNavigate();
-
-  const { setStep, setLoading, loading } = useAuth();
+  const { setStep, login } = useAuth();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({
     email: "",
@@ -49,12 +47,31 @@ export function LoginForm() {
   // --- Handle Submit ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("clicked function");
     const validationErrors = validateForm(formData);
     if (validationErrors.email || validationErrors.password) {
       setErrors(validationErrors);
       return;
     }
-    console.log("login successfull =>", formData);
+
+    try {
+      const user = await login(formData?.email, formData?.password);
+
+      toast.success("Login successful!");
+
+      console.log("Login successful!", user);
+
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Invalid email or password";
+      // setError(errorMessage);
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -90,13 +107,14 @@ export function LoginForm() {
           <div className="grid gap-1">
             <div className="flex items-center">
               <Label htmlFor="password">Password</Label>
-              <button
+              <Button
                 type="button"
+                variant="link"
+                className="ml-auto underline-offset-4 hover:underline"
                 onClick={() => setStep(AuthSteps.FORGOT_PASSWORD)}
-                className="ml-auto text-sm underline-offset-4 hover:underline"
               >
                 Forgot your password?
-              </button>
+              </Button>
             </div>
             <div className="relative">
               <Input

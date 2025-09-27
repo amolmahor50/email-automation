@@ -1,6 +1,7 @@
+import { AppProvider } from "./AppContext";
 import { AuthProvider } from "./AuthContext";
 
-const providers = [AuthProvider];
+const providers = [AuthProvider, AppProvider];
 
 export const ContextProviderWrapper = ({ children }) => {
   return providers.reduceRight((kids, Provider) => {

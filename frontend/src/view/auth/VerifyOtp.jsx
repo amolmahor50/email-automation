@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { AuthSteps } from "@/app/enum";
 
 export function VerifyOtp() {
-  const { setStep, loading, setLoading, sendOtpEmail } = useAuth();
+  const { setStep, isloading, setIsLoading, sendOtpEmail } = useAuth();
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef([]);
 
@@ -72,8 +72,8 @@ export function VerifyOtp() {
         ))}
       </div>
 
-      <Button className="w-full" type="submit" disabled={loading}>
-        {loading ? "Verifying..." : "Verify"}
+      <Button className="w-full" type="submit" disabled={isloading}>
+        {isloading ? "Verifying..." : "Verify"}
       </Button>
 
       <div className="grid gap-4 w-full">
@@ -82,7 +82,7 @@ export function VerifyOtp() {
           onClick={handleResend}
           variant="secondary"
           className="w-full"
-          disabled={loading}
+          disabled={isloading}
         >
           Resend
         </Button>

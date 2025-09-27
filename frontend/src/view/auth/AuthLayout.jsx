@@ -6,7 +6,7 @@ import { ForgotPassword } from "./ForgotPassword";
 import { VerifyOtp } from "./VerifyOtp";
 import { PaymentForm } from "./PaymentForm";
 import { PricingPlanes } from "./PricingPlanes";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Copyright from "@/sections/Copyright";
 import Version from "@/sections/Version";
 import { APP_LOGO } from "@/app/path";

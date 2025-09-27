@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
 import { AuthSteps } from "@/app/enum";
 
@@ -44,7 +45,9 @@ const validateForm = (values) => {
 };
 
 export function RegisterForm() {
-  const { setStep, setSendOtpEmail, loading, setLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const { setStep, signup, loading, setLoading } = useAuth();
 
   const [values, setValues] = useState({
     name: "",
@@ -85,13 +88,24 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const data = {
-      email: values.email,
-      name: values.name,
-      password: values.password,
-    };
+    try {
+      const user = await signup(
+        formData.name,
+        formData.email,
+        formData.password
+      );
 
-    console.log("registation succesfull", data);
+      console.log("register user ->", user);
+
+      // toast.success("Account created successfully!");
+      navigate("/dashboard");
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        "Failed to create account. Please try again.";
+      // setError(errorMessage);
+      console.error(errorMessage);
+    }
   };
 
   return (

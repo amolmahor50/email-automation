@@ -12,7 +12,7 @@ import { CheckIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { pricing } from "@/data/LandingData";
 
 // context
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function PricingPlanes() {
   const { setStep, setSelectedPlan } = useAuth();
