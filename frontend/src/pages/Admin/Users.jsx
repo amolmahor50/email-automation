@@ -1,33 +1,67 @@
 import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
-  Users,
-  Search,
-  Filter,
-  MoreHorizontal,
-  UserCheck,
-  UserX,
-  Mail,
-  Calendar,
-  DollarSign,
-  Edit3,
-  Trash2,
-  Ban,
-  CheckCircle2,
-  XCircle,
-  Clock,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
+import Icon from "@/components/custom/Icon";
+import {
+  TypographyH2,
+  TypographyH3,
+  TypographyMuted,
+} from "@/components/custom/Typography";
 
 const AdminUsers = () => {
+  // ==========================
+  // Header / Filters state
+  // ==========================
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState(null);
 
-  const users = [
+  // ==========================
+  // Users state
+  // ==========================
+  const [users, setUsers] = useState([
     {
       id: "1",
       name: "John Doe",
       email: "john@example.com",
+      password: "123456",
       plan: "Pro",
       status: "active",
       joinDate: "2024-01-15",
@@ -41,6 +75,7 @@ const AdminUsers = () => {
       id: "2",
       name: "Sarah Wilson",
       email: "sarah@company.com",
+      password: "abcdef",
       plan: "Business",
       status: "active",
       joinDate: "2024-01-14",
@@ -54,6 +89,7 @@ const AdminUsers = () => {
       id: "3",
       name: "Mike Johnson",
       email: "mike@startup.io",
+      password: "password",
       plan: "Free",
       status: "active",
       joinDate: "2024-01-13",
@@ -63,46 +99,101 @@ const AdminUsers = () => {
       avatar:
         "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
     },
-    {
-      id: "4",
-      name: "Emily Chen",
-      email: "emily@tech.com",
-      plan: "Pro",
-      status: "suspended",
-      joinDate: "2024-01-12",
-      lastActive: "2024-01-18",
-      emailsSent: 180,
-      revenue: 19,
-      avatar:
-        "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-    {
-      id: "5",
-      name: "David Brown",
-      email: "david@agency.com",
-      plan: "Business",
+  ]);
+
+  // ==========================
+  // Dialog & Form state
+  // ==========================
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    plan: "Free",
+    status: "active",
+    revenue: 0,
+  });
+
+  const [errors, setErrors] = useState({});
+
+  // ==========================
+  // Helper functions
+  // ==========================
+  const suspendUser = (id) =>
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, status: "suspended" } : u))
+    );
+
+  const activateUser = (id) =>
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, status: "active" } : u))
+    );
+
+  const confirmDeleteUser = (id) => setDeleteUserId(id);
+
+  const handleDelete = () => {
+    setUsers((prev) => prev.filter((u) => u.id !== deleteUserId));
+    setDeleteUserId(null);
+  };
+
+  const openEdit = (user) => {
+    setIsEditing(true);
+    setSelectedUser(user);
+    setFormData(user);
+    setErrors({});
+  };
+
+  const openCreate = () => {
+    setIsEditing(false);
+    setSelectedUser({});
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      plan: "Free",
       status: "active",
-      joinDate: "2024-01-11",
-      lastActive: "2024-01-20",
-      emailsSent: 890,
-      revenue: 49,
-      avatar:
-        "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-    {
-      id: "6",
-      name: "Lisa Anderson",
-      email: "lisa@marketing.com",
-      plan: "Pro",
-      status: "pending",
-      joinDate: "2024-01-10",
-      lastActive: "2024-01-17",
-      emailsSent: 67,
-      revenue: 19,
-      avatar:
-        "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-  ];
+      revenue: 0,
+    });
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email))
+      newErrors.email = "Invalid email address";
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+
+    if (isEditing) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === selectedUser.id ? { ...formData, id: u.id } : u
+        )
+      );
+    } else {
+      const newUser = {
+        ...formData,
+        id: Date.now().toString(),
+        joinDate: new Date().toISOString().split("T")[0],
+        lastActive: new Date().toISOString().split("T")[0],
+        emailsSent: 0,
+      };
+      setUsers((prev) => [...prev, newUser]);
+    }
+    setSelectedUser(null);
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -113,401 +204,357 @@ const AdminUsers = () => {
     const matchesPlan =
       planFilter === "all" ||
       user.plan.toLowerCase() === planFilter.toLowerCase();
-
     return matchesSearch && matchesStatus && matchesPlan;
   });
 
-  const getStatusColor = (status) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case "active":
-        return "text-green-700 bg-green-50";
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            <Icon name="CheckCircle2" size={20} /> Active
+          </Badge>
+        );
       case "suspended":
-        return "text-red-700 bg-red-50";
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700">
+            <Icon name="XCircle" size={20} /> Suspended
+          </Badge>
+        );
       case "pending":
-        return "text-yellow-700 bg-yellow-50";
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+            <Icon name="Clock" size={20} /> Pending
+          </Badge>
+        );
       default:
-        return "text-gray-700 bg-gray-50";
+        return <Badge variant="secondary">Unknown</Badge>;
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "suspended":
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case "pending":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getPlanColor = (plan) => {
+  const getPlanBadge = (plan) => {
     switch (plan) {
       case "Business":
-        return "text-purple-700 bg-purple-50";
+        return (
+          <Badge variant="outline" className="bg-purple-50 text-purple-700">
+            {plan}
+          </Badge>
+        );
       case "Pro":
-        return "text-blue-700 bg-blue-50";
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            {plan}
+          </Badge>
+        );
       case "Free":
-        return "text-gray-700 bg-gray-50";
+        return <Badge variant="secondary">{plan}</Badge>;
       default:
-        return "text-gray-700 bg-gray-50";
+        return <Badge variant="secondary">{plan}</Badge>;
     }
   };
 
-  const handleUserAction = (action, userId) => {
-    console.log(`${action} user ${userId}`);
-    // Implement user actions here
-  };
+  // ==========================
+  // Components
+  // ==========================
+  const HeaderSection = () => (
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <TypographyH2>User Management</TypographyH2>
+      <Button onClick={openCreate}>
+        <Icon name="Plus" size={20} /> Add User
+      </Button>
+    </div>
+  );
 
+  const StatsSection = () => (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="flex items-center gap-3 bg-card rounded-md p-4">
+        <div className="rounded-full p-3 bg-blue-500">
+          <Icon name="Users" size={20} className="text-white" />
+        </div>
+        <div>
+          <TypographyMuted>Total Users</TypographyMuted>
+          <TypographyH3>{users.length}</TypographyH3>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 bg-card rounded-md p-4">
+        <div className="rounded-full p-3 bg-green-500">
+          <Icon name="CheckCircle2" size={20} className="text-white" />
+        </div>
+        <div>
+          <TypographyMuted>Active Users</TypographyMuted>
+          <TypographyH3>
+            {users.filter((u) => u.status === "active").length}
+          </TypographyH3>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 bg-card rounded-md p-4">
+        <div className="rounded-full p-3 bg-purple-500">
+          <Icon name="IndianRupee" size={20} className="text-white" />
+        </div>
+        <div>
+          <TypographyMuted>Paid Users</TypographyMuted>
+          <TypographyH3>
+            {users.filter((u) => u.plan !== "Free").length}
+          </TypographyH3>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 bg-card rounded-md p-4">
+        <div className="rounded-full p-3 bg-green-500">
+          <Icon name="IndianRupee" size={20} className="text-white" />
+        </div>
+        <div>
+          <TypographyMuted>Total Revenue</TypographyMuted>
+          <TypographyH3>
+            ₹{users.reduce((sum, u) => sum + u.revenue, 0)}
+          </TypographyH3>
+        </div>
+      </div>
+    </div>
+  );
+
+  const FilterBox = () => (
+    <Card className="md:p-3 rounded-none gap-0">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Icon
+            name="Search"
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v)}>
+          <SelectTrigger className="md:w-[180px] w-full">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={planFilter} onValueChange={(v) => setPlanFilter(v)}>
+          <SelectTrigger className="md:w-[180px] w-full">
+            <SelectValue placeholder="All Plans" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Plans</SelectItem>
+            <SelectItem value="free">Free</SelectItem>
+            <SelectItem value="pro">Pro</SelectItem>
+            <SelectItem value="business">Business</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </Card>
+  );
+
+  const UsersTable = () => (
+    <Card>
+      <TypographyH3>Users ({filteredUsers.length})</TypographyH3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>User</TableHead>
+            <TableHead>Plan</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Activity</TableHead>
+            <TableHead>Revenue</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <TypographyMuted>{user.email}</TypographyMuted>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>{getPlanBadge(user.plan)}</TableCell>
+              <TableCell>{getStatusBadge(user.status)}</TableCell>
+              <TableCell>
+                <p className="text-sm">{user.emailsSent} emails</p>
+                <p className="text-xs text-muted-foreground">
+                  Last: {user.lastActive}
+                </p>
+              </TableCell>
+              <TableCell>₹{user.revenue}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Icon name="MoreHorizontal" size={20} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEdit(user)}>
+                      <Icon name="Edit3" size={20} /> Edit User
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="Mail" size={20} /> Send Email
+                    </DropdownMenuItem>
+
+                    {user.status === "active" ? (
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => suspendUser(user.id)}
+                      >
+                        <Icon name="Ban" className="text-red-600" size={20} />{" "}
+                        Suspend
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        className="text-green-600"
+                        onClick={() => activateUser(user.id)}
+                      >
+                        <Icon name="CheckCircle2" size={20} /> Activate
+                      </DropdownMenuItem>
+                    )}
+
+                    <AlertDialog
+                      open={deleteUserId === user.id}
+                      onOpenChange={() => setDeleteUserId(null)}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => confirmDeleteUser(user.id)}
+                        >
+                          <Icon
+                            name="Trash2"
+                            className="text-red-600"
+                            size={20}
+                          />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete User?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone.{" "}
+                            <strong>{user.name}</strong> will be removed
+                            permanently.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+
+  const UserDialog = () => (
+    <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+      <DialogContent className="max-h-[75vh] overflow-y-auto">
+        <div className="space-y-3">
+          <TypographyH3>{isEditing ? "Edit User" : "Add User"}</TypographyH3>
+          <div className="grid gap-2">
+            <Label>Full Name</Label>
+            <Input
+              placeholder="Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+            {errors.name && (
+              <p className="text-red-600 text-sm">{errors.name}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label>Email</Label>
+            <Input
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+            {errors.email && (
+              <p className="text-red-600 text-sm">{errors.email}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label>Password</Label>
+            <Input
+              placeholder="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
+            {errors.password && (
+              <p className="text-red-600 text-sm">{errors.password}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label>Select Plan</Label>
+            <Select
+              value={formData.plan}
+              onValueChange={(v) => setFormData({ ...formData, plan: v })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Free">Free</SelectItem>
+                <SelectItem value="Pro">Pro</SelectItem>
+                <SelectItem value="Business">Business</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button onClick={handleSave}>
+              {isEditing ? "Update User" : "Add User"}
+            </Button>
+            <Button variant="destructive" onClick={handleSave}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // ==========================
+  // Main render
+  // ==========================
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">
-            Manage users, subscriptions, and account status
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <UserCheck className="w-4 h-4" />
-            <span>Add User</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-            <Users className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter((u) => u.status === "active").length}
-              </p>
-            </div>
-            <CheckCircle2 className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Paid Users</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter((u) => u.plan !== "Free").length}
-              </p>
-            </div>
-            <DollarSign className="w-8 h-8 text-purple-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${users.reduce((sum, u) => sum + u.revenue, 0)}
-              </p>
-            </div>
-            <DollarSign className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="pending">Pending</option>
-          </select>
-
-          {/* Plan Filter */}
-          <select
-            value={planFilter}
-            onChange={(e) => setPlanFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Plans</option>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="business">Business</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Users ({filteredUsers.length})
-          </h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plan
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Revenue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {user.name}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlanColor(
-                        user.plan
-                      )}`}
-                    >
-                      {user.plan}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        user.status
-                      )}`}
-                    >
-                      {getStatusIcon(user.status)}
-                      <span className="ml-1 capitalize">{user.status}</span>
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {user.emailsSent} emails
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Last: {user.lastActive}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      ${user.revenue}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="relative group">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreHorizontal className="w-4 h-4 text-gray-600" />
-                      </button>
-
-                      <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                        <div className="py-2">
-                          <button
-                            onClick={() => setSelectedUser(user)}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                            <span>Edit User</span>
-                          </button>
-                          <button
-                            onClick={() => handleUserAction("email", user.id)}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                          >
-                            <Mail className="w-4 h-4" />
-                            <span>Send Email</span>
-                          </button>
-                          {user.status === "active" ? (
-                            <button
-                              onClick={() =>
-                                handleUserAction("suspend", user.id)
-                              }
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-red-600"
-                            >
-                              <Ban className="w-4 h-4" />
-                              <span>Suspend</span>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                handleUserAction("activate", user.id)
-                              }
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-green-600"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>Activate</span>
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleUserAction("delete", user.id)}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* User Details Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                User Details
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <img
-                  src={selectedUser.avatar}
-                  alt={selectedUser.name}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {selectedUser.name}
-                  </h3>
-                  <p className="text-gray-600">{selectedUser.email}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getPlanColor(
-                        selectedUser.plan
-                      )}`}
-                    >
-                      {selectedUser.plan}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        selectedUser.status
-                      )}`}
-                    >
-                      {selectedUser.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Account Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Join Date:</span>
-                      <span>{selectedUser.joinDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Last Active:</span>
-                      <span>{selectedUser.lastActive}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Emails Sent:</span>
-                      <span>{selectedUser.emailsSent}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Billing Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Monthly Revenue:</span>
-                      <span>${selectedUser.revenue}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Plan:</span>
-                      <span>{selectedUser.plan}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Edit User
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <HeaderSection />
+      <StatsSection />
+      <FilterBox />
+      <UsersTable />
+      <UserDialog />
     </div>
   );
 };

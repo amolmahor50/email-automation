@@ -5,9 +5,7 @@ import {
   Eye,
   MousePointer,
   Mail,
-  Calendar,
   BarChart3,
-  PieChart,
   Users,
   Clock,
 } from "lucide-react";
