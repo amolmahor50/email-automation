@@ -6,9 +6,12 @@ import Layout from "@/view/layout/Layout";
 import Landing from "@/view/landing/Landing";
 import AuthLayout from "@/view/auth/AuthLayout";
 import Dashboard from "@/pages/Dashboard";
-import Templates from "@/pages/Templates";
 import Compose from "@/pages/Compose";
 import History from "@/pages/History";
+import TemplatesList from "@/pages/templates/TemplatesList";
+import CreateTemplate from "@/pages/templates/CreateTemplate";
+import EditTemplate from "@/pages/templates/EditTemplate";
+import PreviewTemplate from "@/pages/templates/PreviewTemplate";
 import Analytics from "@/pages/Analytics";
 import Profile from "@/pages/Profile";
 import Pricing from "@/pages/Pricing";
@@ -20,14 +23,32 @@ import AdminRevenue from "@/pages/Admin/Revenue";
 import AdminTemplates from "@/pages/Admin/Templates";
 import AdminSettings from "@/pages/Admin/Settings";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 function App() {
+  const { user } = useAuth();
+
   return (
     <Routes>
+      {/* Smart root route */}
+      <Route
+        path="/"
+        element={
+          user ? (
+            <Navigate
+              to={user.role === "admin" ? "/admin" : "/dashboard"}
+              replace
+            />
+          ) : (
+            <Landing />
+          )
+        }
+      />
+
       {/* Public Routes */}
-      <Route path="/" element={<Landing />} />
       <Route path="/auth/*" element={<AuthLayout />} />
 
-      {/* Protected User/Admin Routes wrapped in Layout */}
+      {/* Protected Routes */}
       <Route
         element={
           <ProtectedRoute>
@@ -37,7 +58,10 @@ function App() {
       >
         {/* User Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/templates" element={<Templates />} />
+        <Route path="/templates" element={<TemplatesList />} />
+        <Route path="/templates/create" element={<CreateTemplate />} />
+        <Route path="/templates/:id/edit" element={<EditTemplate />} />
+        <Route path="/templates/:id/preview" element={<PreviewTemplate />} />
         <Route path="/compose" element={<Compose />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />

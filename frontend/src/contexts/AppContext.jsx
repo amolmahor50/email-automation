@@ -6,72 +6,22 @@ const AppContext = createContext(undefined);
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
+  if (!context) throw new Error("useApp must be used within an AppProvider");
   return context;
 };
 
 export const AppProvider = ({ children }) => {
-  const [templates, setTemplates] = useState([
-    {
-      id: "1",
-      title: "Job Application",
-      body: `Dear Hiring Manager,
-
-I am writing to express my interest in the [Position Title] position at [Company Name]. With my background in [Your Field], I believe I would be a valuable addition to your team.
-
-I have attached my resume for your review. I would welcome the opportunity to discuss how my skills and experience align with your needs.
-
-Thank you for your time and consideration.`,
-      defaultAttachments: ["resume.pdf"],
-      visibility: "global",
-      category: "Career",
-      createdAt: "2024-01-01T10:00:00Z",
-    },
-    {
-      id: "2",
-      title: "Business Proposal",
-      body: `Dear [Client Name],
-
-I hope this email finds you well. I am writing to present a business proposal that I believe could be mutually beneficial for both our organizations.
-
-After researching your company and understanding your needs, I have developed a comprehensive solution that addresses your key challenges while providing significant value.
-
-I would appreciate the opportunity to discuss this proposal in detail at your convenience.
-
-Best regards,`,
-      defaultAttachments: ["proposal.pdf"],
-      visibility: "global",
-      category: "Business",
-      createdAt: "2024-01-02T10:00:00Z",
-    },
-    {
-      id: "3",
-      title: "Follow-up Meeting",
-      body: `Dear [Name],
-
-Thank you for taking the time to meet with me yesterday. I wanted to follow up on our discussion and provide you with the additional information you requested.
-
-As discussed, I've attached the relevant documents and would be happy to schedule another meeting to continue our conversation.
-
-Please let me know your availability for next week.`,
-      defaultAttachments: [],
-      visibility: "global",
-      category: "Professional",
-      createdAt: "2024-01-03T10:00:00Z",
-    },
-  ]);
+  const [templates, setTemplates] = useState([]);
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadTemplates = async () => {
+  const loadTemplates = async (filters = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await templateService.getTemplates();
-      setTemplates(response.templates);
+      const data = await templateService.getTemplates(filters);
+      setTemplates(data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load templates");
     } finally {
@@ -79,9 +29,9 @@ Please let me know your availability for next week.`,
     }
   };
 
-  const addTemplate = async (templateData) => {
+  const addTemplate = async (formData) => {
     try {
-      const newTemplate = await templateService.createTemplate(templateData);
+      const newTemplate = await templateService.createTemplate(formData);
       setTemplates((prev) => [...prev, newTemplate]);
       return newTemplate;
     } catch (err) {
@@ -90,15 +40,13 @@ Please let me know your availability for next week.`,
     }
   };
 
-  const updateTemplate = async (id, updates) => {
+  const updateTemplate = async (id, formData) => {
     try {
-      const updatedTemplate = await templateService.updateTemplate(id, updates);
+      const updated = await templateService.updateTemplate(id, formData);
       setTemplates((prev) =>
-        prev.map((template) =>
-          template._id === id ? updatedTemplate : template
-        )
+        prev.map((t) => (t._id === id || t.id === id ? updated : t))
       );
-      return updatedTemplate;
+      return updated;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update template");
       throw err;
@@ -108,13 +56,14 @@ Please let me know your availability for next week.`,
   const deleteTemplate = async (id) => {
     try {
       await templateService.deleteTemplate(id);
-      setTemplates((prev) => prev.filter((template) => template.id !== id));
+      setTemplates((prev) => prev.filter((t) => t._id !== id && t.id !== id));
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete template");
       throw err;
     }
   };
 
+  // Emails
   const loadEmails = async () => {
     setLoading(true);
     setError(null);
@@ -131,7 +80,6 @@ Please let me know your availability for next week.`,
   const sendEmail = async (emailData) => {
     try {
       await emailService.sendEmail(emailData);
-      // Reload emails to get the updated list
       await loadEmails();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send email");
@@ -145,7 +93,6 @@ Please let me know your availability for next week.`,
         ...emailData,
         scheduledAt: scheduleDate.toISOString(),
       });
-      // Reload emails to get the updated list
       await loadEmails();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to schedule email");
@@ -159,6 +106,7 @@ Please let me know your availability for next week.`,
         templates,
         emails,
         loading,
+        setLoading,
         error,
         loadTemplates,
         addTemplate,

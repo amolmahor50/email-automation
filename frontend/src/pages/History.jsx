@@ -10,6 +10,7 @@ import {
   XCircle,
   Eye,
   MoreHorizontal,
+  X,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "react-hot-toast";
@@ -41,7 +42,7 @@ import {
   TypographyH1,
   TypographyH2,
   TypographyH3,
-} from "../components/custom/Typography";
+} from "@/components/custom/Typography";
 
 const History = () => {
   const { emails, loadEmails, loading } = useApp();
@@ -179,7 +180,7 @@ const History = () => {
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
         <Card>
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-green-300">
@@ -194,6 +195,19 @@ const History = () => {
           </div>
         </Card>
 
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-red-300">
+              <X size={22} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Failed</p>
+              <TypographyH1>
+                {emails.filter((e) => e.status === "failed").length}
+              </TypographyH1>
+            </div>
+          </div>
+        </Card>
         <Card>
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-blue-300">

@@ -6,9 +6,8 @@ export const templateService = {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, value.toString());
     });
-
     const response = await api.get(`/templates?${params}`);
-    return response.data;
+    return response.data.templates;
   },
 
   async getTemplate(id) {
@@ -16,19 +15,24 @@ export const templateService = {
     return response.data.template;
   },
 
-  async createTemplate(data) {
-    const response = await api.post("/templates", data);
+  async createTemplate(formData) {
+    const response = await api.post("/templates", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data.template;
   },
 
-  async updateTemplate(id, data) {
-    const response = await api.put(`/templates/${id}`, data);
+  async updateTemplate(id, formData) {
+    console.log("id, formData", id, formData);
+    const response = await api.put(`/templates/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data.template;
   },
 
   async deleteTemplate(id) {
-    const response = await api.delete(`/templates/${id}`);
-    return response.data;
+    await api.delete(`/templates/${id}`);
+    return true;
   },
 
   async getPopularTemplates(limit = 10) {
@@ -40,7 +44,6 @@ export const templateService = {
     const params = new URLSearchParams({ q: query });
     if (options.category) params.append("category", options.category);
     if (options.limit) params.append("limit", options.limit.toString());
-
     const response = await api.get(`/templates/search?${params}`);
     return response.data.templates;
   },

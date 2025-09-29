@@ -1,18 +1,19 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 // Create transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  return nodemailer.createTransport({
+    // <-- use createTransport, not createTransporter
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: process.env.SMTP_PORT || 587,
-    secure: false,
+    secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
+      pass: process.env.SMTP_PASS,
     },
     tls: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+    },
   });
 };
 
@@ -22,14 +23,24 @@ const sendEmailService = async (emailData) => {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: `${process.env.FROM_NAME || 'EmailFlow'} <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
-      to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-      cc: emailData.cc ? (Array.isArray(emailData.cc) ? emailData.cc.join(', ') : emailData.cc) : undefined,
-      bcc: emailData.bcc ? (Array.isArray(emailData.bcc) ? emailData.bcc.join(', ') : emailData.bcc) : undefined,
+      from: `${process.env.FROM_NAME || "EmailFlow"} <${
+        process.env.FROM_EMAIL || process.env.SMTP_USER
+      }>`,
+      to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
+      cc: emailData.cc
+        ? Array.isArray(emailData.cc)
+          ? emailData.cc.join(", ")
+          : emailData.cc
+        : undefined,
+      bcc: emailData.bcc
+        ? Array.isArray(emailData.bcc)
+          ? emailData.bcc.join(", ")
+          : emailData.bcc
+        : undefined,
       subject: emailData.subject,
       html: emailData.html,
       text: emailData.text,
-      attachments: emailData.attachments
+      attachments: emailData.attachments,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -38,25 +49,26 @@ const sendEmailService = async (emailData) => {
       messageId: result.messageId,
       providerMessageId: result.messageId,
       accepted: result.accepted,
-      rejected: result.rejected
+      rejected: result.rejected,
     };
   } catch (error) {
-    console.error('Email service error:', error);
+    console.error("Email service error:", error);
     throw new Error(`Failed to send email: ${error.message}`);
   }
 };
 
 // Send simple email (for system notifications)
-const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({ to, subject, html, text, fromEmail }) => {
   try {
     return await sendEmailService({
+      from: fromEmail,
       to,
       subject,
       html,
-      text
+      text,
     });
   } catch (error) {
-    console.error('Send email error:', error);
+    console.error("Send email error:", error);
     throw error;
   }
 };
@@ -92,15 +104,15 @@ const sendWelcomeEmail = async (user) => {
 
   return await sendEmail({
     to: user.email,
-    subject: 'Welcome to EmailFlow - Get Started Today!',
-    html
+    subject: "Welcome to EmailFlow - Get Started Today!",
+    html,
   });
 };
 
 // Send password reset email
 const sendPasswordResetEmail = async (user, resetToken) => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-  
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #2563eb;">Password Reset Request</h2>
@@ -128,8 +140,8 @@ const sendPasswordResetEmail = async (user, resetToken) => {
 
   return await sendEmail({
     to: user.email,
-    subject: 'Reset Your EmailFlow Password',
-    html
+    subject: "Reset Your EmailFlow Password",
+    html,
   });
 };
 
@@ -139,11 +151,15 @@ const sendSubscriptionConfirmationEmail = async (user, plan, amount) => {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #10b981;">Subscription Confirmed!</h2>
       <p>Hi ${user.name},</p>
-      <p>Thank you for upgrading to EmailFlow ${plan.charAt(0).toUpperCase() + plan.slice(1)}!</p>
+      <p>Thank you for upgrading to EmailFlow ${
+        plan.charAt(0).toUpperCase() + plan.slice(1)
+      }!</p>
       
       <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #059669;">Subscription Details:</h3>
-        <p><strong>Plan:</strong> ${plan.charAt(0).toUpperCase() + plan.slice(1)}</p>
+        <p><strong>Plan:</strong> ${
+          plan.charAt(0).toUpperCase() + plan.slice(1)
+        }</p>
         <p><strong>Amount:</strong> $${amount}</p>
         <p><strong>Billing Cycle:</strong> Monthly</p>
       </div>
@@ -163,8 +179,10 @@ const sendSubscriptionConfirmationEmail = async (user, plan, amount) => {
 
   return await sendEmail({
     to: user.email,
-    subject: `Welcome to EmailFlow ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`,
-    html
+    subject: `Welcome to EmailFlow ${
+      plan.charAt(0).toUpperCase() + plan.slice(1)
+    }!`,
+    html,
   });
 };
 
@@ -173,5 +191,5 @@ module.exports = {
   sendEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
-  sendSubscriptionConfirmationEmail
+  sendSubscriptionConfirmationEmail,
 };

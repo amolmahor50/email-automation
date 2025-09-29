@@ -21,7 +21,7 @@ import {
   TypographyMuted,
 } from "@/components/custom/Typography";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -84,6 +84,8 @@ const Dashboard = () => {
 
   const recentEmails = emails.slice(0, 5);
   const recentTemplates = templates.slice(0, 4);
+
+  console.log("dashboard recentEmails fetched---", recentEmails);
 
   return (
     <div className="space-y-6">
@@ -153,7 +155,9 @@ const Dashboard = () => {
           <div className="pb-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <TypographyH3>Recent Emails</TypographyH3>
-              <Button variant="link">View all</Button>
+              <Link to="/history">
+                <Button variant="link">View all</Button>
+              </Link>
             </div>
           </div>
           <div>
@@ -173,14 +177,14 @@ const Dashboard = () => {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
+                    <div className="font-medium capitalize text-gray-900 truncate">
                       {email.subject}
                     </div>
                     <div className="text-sm text-gray-600 truncate">
-                      To: {email.recipients.join(", ")}
+                      To: {email?.recipients?.[0].email}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <div className="grid gap-1 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
                       <TrendingUp className="w-4 h-4" />
                       <span>{email.analytics.opens}</span>
@@ -201,22 +205,22 @@ const Dashboard = () => {
           <Card className="gap-0 space-y-4">
             <TypographyH3>Quick Actions</TypographyH3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button
-                onClick={() => navigate("/compose")}
+              <Link
+                to="/compose"
                 className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors group"
               >
                 <Send className="w-6 h-6 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                 <div className="font-medium text-gray-900">Compose Email</div>
                 <div className="text-sm text-gray-600">Start writing</div>
-              </button>
-              <button
-                onClick={() => navigate("/templates")}
+              </Link>
+              <Link
+                to="/templates"
                 className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors group"
               >
                 <FileText className="w-6 h-6 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                 <div className="font-medium text-gray-900">New Template</div>
                 <div className="text-sm text-gray-600">Create template</div>
-              </button>
+              </Link>
             </div>
           </Card>
 
@@ -228,16 +232,17 @@ const Dashboard = () => {
             <div>
               <div className="space-y-3">
                 {recentTemplates.map((template, index) => (
-                  <div
+                  <Link
+                    to={`/templete/${template?._id}`}
                     key={index}
-                    className="flex items-center justify-between mt-3 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-center py-1 px-4 cursor-pointer justify-between mt-3 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-purple-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium  capitalize text-gray-900">
                           {template.title}
                         </div>
                         <div className="text-sm text-gray-600 capitalize">
@@ -245,10 +250,8 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      Use
-                    </button>
-                  </div>
+                    <Button variant="link">Use</Button>
+                  </Link>
                 ))}
               </div>
             </div>

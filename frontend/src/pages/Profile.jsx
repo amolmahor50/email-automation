@@ -105,7 +105,7 @@ const PersonalInfo = ({ profileData, setProfileData, handleSave }) => {
             onChange={(e) =>
               setProfileData({ ...profileData, co: e.target.value })
             }
-            placeholder="Your co name"
+            placeholder="Your company name"
           />
         </div>
         <div className="grid gap-2">

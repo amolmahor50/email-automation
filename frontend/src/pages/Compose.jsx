@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import {
-  Send,
-  Paperclip,
-  FileText,
-  Users,
-  Calendar,
-  Wand2,
-  Save,
-  Eye,
-  CheckCircle2,
-} from "lucide-react";
+import { Send, FileText, Users, Calendar, Upload } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  TypographyH2,
+  TypographyH3,
+  TypographyMuted,
+  TypographyH5,
+  TypographySmall,
+} from "@/components/custom/Typography";
+import Icon from "@/components/custom/Icon";
 
 const Compose = () => {
   const { templates, sendEmail, scheduleEmail, loadTemplates } = useApp();
@@ -88,6 +98,15 @@ const Compose = () => {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setEmailData((prev) => ({
+      ...prev,
+      attachments: [...prev.attachments, ...files],
+    }));
+  };
+
   const handleSchedule = async () => {
     try {
       const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
@@ -121,23 +140,20 @@ const Compose = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Compose Email</h1>
-          <p className="text-gray-600">Create and send professional emails</p>
+      <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
+        <div className="space-y-1">
+          <TypographyH2>Compose Email</TypographyH2>
+          <TypographyMuted>Create and send professional emails</TypographyMuted>
         </div>
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setShowPreview(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            <Eye className="w-4 h-4" />
-            <span>Preview</span>
-          </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-            <Save className="w-4 h-4" />
-            <span>Save Draft</span>
-          </button>
+          <Button variant="outline" onClick={() => setShowPreview(true)}>
+            <Icon name="Eye" size={20} />
+            Preview
+          </Button>
+          <Button>
+            <Icon name="Save" size={20} />
+            Save Draft
+          </Button>
         </div>
       </div>
 
@@ -145,127 +161,129 @@ const Compose = () => {
         {/* Main Compose Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Template Selection */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Choose Template</h2>
-              <button
-                onClick={() => navigate("/templates")}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
+          <Card className="md:p-4">
+            <div className="flex items-center justify-between">
+              <TypographyH3>Choose Template</TypographyH3>
+              <Button variant="link" onClick={() => navigate("/templates")}>
                 Manage Templates
-              </button>
+              </Button>
             </div>
-            <select
-              value={selectedTemplate}
-              onChange={(e) => handleTemplateSelect(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Select
+              value={selectedTemplate || undefined}
+              onValueChange={(value) => handleTemplateSelect(value)}
             >
-              <option value="">Start from scratch</option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.title} ({template.category})
-                </option>
-              ))}
-            </select>
-          </div>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Start from scratch" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates?.map((template) => (
+                  <SelectItem
+                    key={template.id || template._id}
+                    value={template.id || template._id}
+                  >
+                    {template.title} ({template.category})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Card>
 
           {/* Email Form */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">Email Details</h2>
-            </div>
-            <div className="p-6 space-y-4">
+          <Card>
+            <TypographyH3>Email Details</TypographyH3>
+            <div className="space-y-4">
               {/* Recipients */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="grid gap-2">
+                <Label>
                   To <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={emailData.recipients}
-                    onChange={(e) =>
-                      setEmailData({ ...emailData, recipients: e.target.value })
-                    }
-                    placeholder="recipient@example.com, another@example.com"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
+                </Label>
+                <Input
+                  type="text"
+                  value={emailData.recipients}
+                  onChange={(e) =>
+                    setEmailData({ ...emailData, recipients: e.target.value })
+                  }
+                  placeholder="recipient@example.com, another@example.com"
+                />
               </div>
 
               {/* CC */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  CC (optional)
-                </label>
-                <input
+              <div className="grid gap-2">
+                <Label>CC (optional)</Label>
+                <Input
                   type="text"
                   value={emailData.cc}
                   onChange={(e) =>
                     setEmailData({ ...emailData, cc: e.target.value })
                   }
                   placeholder="cc@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               {/* Subject */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="grid gap-2">
+                <Label>
                   Subject <span className="text-red-500">*</span>
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={emailData.subject}
                   onChange={(e) =>
                     setEmailData({ ...emailData, subject: e.target.value })
                   }
                   placeholder="Enter email subject"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
 
               {/* Body */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="grid gap-2">
+                <Label>
                   Message <span className="text-red-500">*</span>
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   value={emailData.body}
                   onChange={(e) =>
                     setEmailData({ ...emailData, body: e.target.value })
                   }
                   rows={12}
                   placeholder="Write your email content here..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
 
               {/* Attachments */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attachments
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                  <Paperclip className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    Drop files here or click to browse
-                  </p>
-                  <button className="text-sm text-blue-600 hover:text-blue-700">
-                    Select Files
-                  </button>
+              <div className="grid gap-2">
+                <Label>Attachments</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 space-y-3 text-center">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                  <TypographyH5>Upload Documents</TypographyH5>
+                  <TypographyMuted>
+                    Drag and drop files here or click to browse. Supported
+                    formats: PDF, DOC, DOCX
+                  </TypographyMuted>
+                  <Input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="bg-primary text-white px-4 py-2 rounded-full hover:bg-primary transition-colors cursor-pointer inline-block"
+                  >
+                    Choose Files
+                  </label>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
+            <Button
               onClick={handleSend}
               disabled={
                 !emailData.recipients ||
@@ -273,7 +291,6 @@ const Compose = () => {
                 !emailData.body ||
                 isSending
               }
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
             >
               {isSending ? (
                 <>
@@ -286,7 +303,7 @@ const Compose = () => {
                   <span>Send Email</span>
                 </>
               )}
-            </button>
+            </Button>
 
             {user?.subscription.plan !== "free" && (
               <button
@@ -303,10 +320,10 @@ const Compose = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* AI Writing Assistant */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Wand2 className="w-5 h-5 text-purple-600" />
-              <h3 className="font-semibold text-gray-900">AI Assistant</h3>
+          <Card>
+            <div className="flex items-center space-x-2">
+              <Icon name="Wand2" size={20} className="text-purple-600" />
+              <TypographyH3>AI Assistant</TypographyH3>
               {user?.subscription.plan === "free" && (
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
                   Pro
@@ -327,7 +344,10 @@ const Compose = () => {
             </div>
 
             {user?.subscription.plan === "free" && (
-              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <Link
+                to="/subscription"
+                className="p-3 cursor-pointer bg-purple-50 border border-purple-200 rounded-lg"
+              >
                 <p className="text-sm text-purple-800 mb-2">
                   Upgrade to Pro for AI writing assistance
                 </p>
@@ -337,13 +357,13 @@ const Compose = () => {
                 >
                   View Plans →
                 </button>
-              </div>
+              </Link>
             )}
-          </div>
+          </Card>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Quick Stats</h3>
+          <Card>
+            <TypographyH3>Quick Stats</TypographyH3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Word count</span>
@@ -370,13 +390,11 @@ const Compose = () => {
                 </span>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Recent Templates */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">
-              Recent Templates
-            </h3>
+          <Card>
+            <TypographyH3>Recent Templates</TypographyH3>
             <div className="space-y-2">
               {templates.slice(0, 3).map((template) => (
                 <button
@@ -386,9 +404,9 @@ const Compose = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <FileText className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm font-medium truncate">
+                    <TypographySmall className="truncate capitalize">
                       {template.title}
-                    </span>
+                    </TypographySmall>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {template.category}
@@ -396,7 +414,7 @@ const Compose = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 
@@ -410,28 +428,22 @@ const Compose = () => {
               </h2>
             </div>
             <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date
-                </label>
+              <div className="grid gap-2">
+                <Label>Date</Label>
                 <input
                   type="date"
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time
-                </label>
+              <div className="grid gap-2">
+                <Label>Time</Label>
                 <input
                   type="time"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>

@@ -54,13 +54,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const { user: userData } = await authService.login({ email, password });
       setUser(userData);
+
       localStorage.setItem(
         AuthLocalStorage.USER_REGISTER,
         JSON.stringify(userData)
       );
       localStorage.setItem(AuthLocalStorage.TOKEN, userData.token);
 
-      // Navigate after login based on role
       navigate(userData.role === "admin" ? "/admin" : "/dashboard");
 
       return userData;
@@ -87,7 +87,6 @@ export const AuthProvider = ({ children }) => {
       );
       localStorage.setItem(AuthLocalStorage.TOKEN, userData.token);
 
-      // Navigate after signup based on role
       navigate(userData.role === "admin" ? "/admin" : "/dashboard");
 
       return userData;
@@ -112,7 +111,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem(AuthLocalStorage.TOKEN);
       localStorage.removeItem(AuthLocalStorage.USER_REGISTER);
-      navigate("/auth"); // Redirect to login after logout
+      navigate("/auth");
       setIsLoading(false);
     }
   };
@@ -146,7 +145,14 @@ export const AuthProvider = ({ children }) => {
         setIsLoading,
       }}
     >
-      {children}
+      {/* Block rendering until loading is done */}
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
