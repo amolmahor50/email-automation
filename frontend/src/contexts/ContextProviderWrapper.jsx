@@ -1,4 +1,3 @@
-import { AdminProvider } from "./AdminContext";
 import { AppProvider } from "./AppContext";
 import { AuthProvider } from "./AuthContext";
 

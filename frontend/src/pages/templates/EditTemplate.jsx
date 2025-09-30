@@ -21,12 +21,64 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Paperclip, Upload, X, Download } from "lucide-react";
+import { X, Upload, Download } from "lucide-react";
 
 import QuillEditor from "@/components/QuillEditor";
 import "react-quill-new/dist/quill.snow.css";
 import { useApp } from "@/contexts/AppContext";
 
+/* ---------------- Tags Input Component ---------------- */
+const TagsInput = ({ value, onChange }) => {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleAddTag = () => {
+    const trimmed = inputValue.trim();
+    if (trimmed && !value.includes(trimmed)) {
+      onChange([...value, trimmed]);
+      setInputValue("");
+    }
+  };
+
+  const handleRemoveTag = (tag) => onChange(value.filter((t) => t !== tag));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Add a tag and press Enter"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddTag();
+            }
+          }}
+        />
+        <Button type="button" onClick={handleAddTag}>
+          Add
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {value.map((tag, i) => (
+          <span
+            key={i}
+            className="bg-gray-200 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
+          >
+            {tag}
+            <X
+              className="w-4 h-4 cursor-pointer text-red-500"
+              onClick={() => handleRemoveTag(tag)}
+            />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ---------------- Main Edit Template Component ---------------- */
 const EditTemplate = () => {
   const { loading, setLoading, updateTemplate } = useApp();
   const { id } = useParams();
@@ -38,22 +90,35 @@ const EditTemplate = () => {
     category: "Professional",
     visibility: "private",
     attachments: [], // existing + new files
+    tags: [], // existing + new tags
   });
 
-  // Fetch template
+  /* ---------------- Fetch Template ---------------- */
   useEffect(() => {
     const fetchTemplate = async () => {
       setLoading(true);
       try {
         const template = await templateService.getTemplate(id);
+
+        // Map attachments to include url for download
+        const attachmentsWithUrl = (template.defaultAttachments || []).map(
+          (file) => ({
+            ...file,
+            url: `/api/templates/${template._id}/attachment/${file._id}`,
+            isNew: false, // mark as existing file
+          })
+        );
+
         setFormData({
-          title: template.title,
-          body: template.body,
-          category: template.category,
-          visibility: template.visibility,
-          attachments: template.attachments || [],
+          title: template.title || "",
+          body: template.body || "",
+          category: template.category || "Professional",
+          visibility: template.visibility || "private",
+          attachments: attachmentsWithUrl,
+          tags: template.tags || [],
         });
       } catch (err) {
+        console.error(err);
         toast.error("Failed to load template");
       } finally {
         setLoading(false);
@@ -63,7 +128,7 @@ const EditTemplate = () => {
     if (id) fetchTemplate();
   }, [id]);
 
-  // Handle new file selection
+  /* ---------------- Handle File Upload ---------------- */
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData((prev) => ({
@@ -72,14 +137,15 @@ const EditTemplate = () => {
     }));
   };
 
-  // Remove attachment (existing or new)
+  /* ---------------- Remove Attachment ---------------- */
   const removeAttachment = (index) => {
-    const updated = [...formData.attachments];
-    updated.splice(index, 1);
-    setFormData((prev) => ({ ...prev, attachments: updated }));
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
   };
 
-  // Submit form
+  /* ---------------- Submit Updated Template ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -88,11 +154,12 @@ const EditTemplate = () => {
       payload.append("body", formData.body);
       payload.append("category", formData.category);
       payload.append("visibility", formData.visibility);
+      payload.append("tags", JSON.stringify(formData.tags));
 
       // Only append new files
       formData.attachments.forEach((file) => {
-        if (file instanceof File) {
-          payload.append("attachments", file);
+        if (file.isNew) {
+          payload.append("attachments", file.file);
         }
       });
 
@@ -100,18 +167,30 @@ const EditTemplate = () => {
       toast.success("Template updated!");
       navigate("/templates");
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.message || "Failed to update template");
     }
   };
 
-  // Helper to download existing files
+  /* ---------------- Download Attachment ---------------- */
   const downloadFile = (file) => {
-    const link = document.createElement("a");
-    link.href = file instanceof File ? URL.createObjectURL(file) : file.url;
-    link.download = file.originalName || file.name || file.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (file.isNew) {
+      // new file from input
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(file.file);
+      link.download = file.file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // existing file from MongoDB
+      const link = document.createElement("a");
+      link.href = file.url;
+      link.download = file.originalName || file.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (loading)
@@ -134,7 +213,6 @@ const EditTemplate = () => {
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              className="capitalize"
               required
             />
           </div>
@@ -150,26 +228,34 @@ const EditTemplate = () => {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Career">Career</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-                <SelectItem value="Professional">Professional</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
+                {["Career", "Business", "Professional", "Personal"].map(
+                  (cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Tags */}
+          <div className="grid gap-2">
+            <Label>Tags</Label>
+            <TagsInput
+              value={formData.tags}
+              onChange={(tags) => setFormData({ ...formData, tags })}
+            />
           </div>
 
           {/* Body + Preview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Body</Label>
-              <div className="min-h-[200px]">
-                <QuillEditor
-                  value={formData.body}
-                  onChange={(value) =>
-                    setFormData({ ...formData, body: value })
-                  }
-                />
-              </div>
+              <QuillEditor
+                value={formData.body}
+                onChange={(value) => setFormData({ ...formData, body: value })}
+              />
             </div>
             <div className="space-y-2 mt-22 md:mt-0">
               <Label>Preview</Label>
@@ -209,17 +295,15 @@ const EditTemplate = () => {
               </label>
             </div>
 
-            {formData.attachments.map((file, index) => {
-              const isFileObj = file instanceof File;
-              const fileType = isFileObj ? file.type : file.mimetype;
-              const fileName = file.originalName || file.name || file.filename;
-              const fileUrl = isFileObj
-                ? URL.createObjectURL(file)
-                : `${import.meta.env.BASE_URL}${file.url}`;
+            {formData.attachments.map((file, idx) => {
+              const fileType = file.isNew ? file.file.type : file.mimeType;
+              const fileName = file.isNew
+                ? file.file.name
+                : file.originalName || file.filename;
 
               return (
                 <div
-                  key={index}
+                  key={idx}
                   className="border p-2 rounded flex flex-col gap-2"
                 >
                   <div className="flex items-center justify-between">
@@ -227,18 +311,16 @@ const EditTemplate = () => {
                       {fileName}
                     </span>
                     <div className="flex gap-2">
-                      {!isFileObj && (
-                        <button
-                          type="button"
-                          onClick={() => downloadFile(file)}
-                          className="text-green-500"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      )}
                       <button
                         type="button"
-                        onClick={() => removeAttachment(index)}
+                        onClick={() => downloadFile(file)}
+                        className="text-green-500"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(idx)}
                         className="text-red-500"
                       >
                         <X className="w-4 h-4" />
@@ -246,9 +328,11 @@ const EditTemplate = () => {
                     </div>
                   </div>
 
-                  {fileType?.startsWith("image/") && (
+                  {fileType.startsWith("image/") && (
                     <img
-                      src={fileUrl}
+                      src={
+                        file.isNew ? URL.createObjectURL(file.file) : file.url
+                      }
                       alt={fileName}
                       className="max-h-40 w-full object-cover rounded border"
                     />
@@ -256,7 +340,9 @@ const EditTemplate = () => {
 
                   {fileType === "application/pdf" && (
                     <iframe
-                      src={fileUrl}
+                      src={
+                        file.isNew ? URL.createObjectURL(file.file) : file.url
+                      }
                       className="w-full h-40 border rounded"
                       title={fileName}
                     />

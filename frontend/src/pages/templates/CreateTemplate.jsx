@@ -26,6 +26,58 @@ import { Upload, X } from "lucide-react";
 import QuillEditor from "@/components/QuillEditor";
 import "react-quill-new/dist/quill.snow.css";
 
+/* ---------------- Tags Input Component ---------------- */
+const TagsInput = ({ value, onChange }) => {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleAddTag = () => {
+    const trimmed = inputValue.trim();
+    if (trimmed && !value.includes(trimmed)) {
+      onChange([...value, trimmed]);
+      setInputValue("");
+    }
+  };
+
+  const handleRemoveTag = (tag) => onChange(value.filter((t) => t !== tag));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Add a tag and press Enter"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddTag();
+            }
+          }}
+        />
+        <Button type="button" onClick={handleAddTag}>
+          Add
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {value.map((tag, i) => (
+          <span
+            key={i}
+            className="bg-gray-200 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
+          >
+            {tag}
+            <X
+              className="w-4 h-4 cursor-pointer text-red-500"
+              onClick={() => handleRemoveTag(tag)}
+            />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ---------------- Main Component ---------------- */
 const CreateTemplate = () => {
   const { addTemplate } = useApp();
   const navigate = useNavigate();
@@ -35,10 +87,11 @@ const CreateTemplate = () => {
     body: "",
     category: "Professional",
     visibility: "private",
-    attachments: [],
+    attachments: [], // array of File objects
+    tags: [],
   });
 
-  // Handle multiple file upload
+  /* ---------------- Handle File Upload ---------------- */
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData((prev) => ({
@@ -47,14 +100,15 @@ const CreateTemplate = () => {
     }));
   };
 
-  // Remove file
+  /* ---------------- Remove Attachment ---------------- */
   const removeAttachment = (index) => {
-    const updated = [...formData.attachments];
-    updated.splice(index, 1);
-    setFormData((prev) => ({ ...prev, attachments: updated }));
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
   };
 
-  // Submit form
+  /* ---------------- Submit Form ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.body) {
@@ -68,18 +122,22 @@ const CreateTemplate = () => {
       payload.append("body", formData.body);
       payload.append("category", formData.category);
       payload.append("visibility", formData.visibility);
-      formData.attachments.forEach((file) =>
-        payload.append("attachments", file)
-      );
+      payload.append("tags", JSON.stringify(formData.tags));
+
+      formData.attachments.forEach((file) => {
+        payload.append("attachments", file);
+      });
 
       await addTemplate(payload);
       toast.success("Template created!");
       navigate("/templates");
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.message || "Failed to create template");
     }
   };
 
+  /* ---------------- Render Component ---------------- */
   return (
     <div className="space-y-6">
       <TypographyH2>Create Template</TypographyH2>
@@ -97,42 +155,51 @@ const CreateTemplate = () => {
             />
           </div>
 
-          {/* Category */}
-          <div className="grid gap-2">
-            <Label>Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(v) => setFormData({ ...formData, category: v })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Career">Career</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-                <SelectItem value="Professional">Professional</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Category & Tags */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>Category</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(v) => setFormData({ ...formData, category: v })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Career", "Business", "Professional", "Personal"].map(
+                    (cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Tags</Label>
+              <TagsInput
+                value={formData.tags}
+                onChange={(tags) => setFormData({ ...formData, tags })}
+              />
+            </div>
           </div>
 
-          {/* Body (Rich Text Editor + Preview) */}
+          {/* Body */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Body</Label>
-              <div className="min-h-[200px]">
-                <QuillEditor
-                  value={formData.body}
-                  onChange={(value) =>
-                    setFormData({ ...formData, body: value })
-                  }
-                />
-              </div>
+              <QuillEditor
+                value={formData.body}
+                onChange={(value) => setFormData({ ...formData, body: value })}
+              />
             </div>
             <div className="space-y-2 mt-22 md:mt-0">
               <Label>Preview</Label>
               <div
-                className="prose max-w-full h-[200px] md:h-[255px] overflow-y-auto border p-2 text-sm"
+                className="prose max-w-full h-[200px] overflow-y-auto border p-2 text-sm"
                 dangerouslySetInnerHTML={{
                   __html:
                     formData.body || "<p>Body content will appear here...</p>",
@@ -168,60 +235,57 @@ const CreateTemplate = () => {
             </div>
 
             {formData.attachments.length > 0 && (
-              <>
-                <TypographyH5>Attachments</TypographyH5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {formData.attachments.map((file, index) => {
-                    const isImage = file.type.startsWith("image/");
-                    const isPDF = file.type === "application/pdf";
-                    const isCSV =
-                      file.type === "text/csv" ||
-                      file.name.toLowerCase().endsWith(".csv");
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                {formData.attachments.map((file, idx) => {
+                  const isImage = file.type.startsWith("image/");
+                  const isPDF = file.type === "application/pdf";
+                  const isCSV =
+                    file.type === "text/csv" ||
+                    file.name.toLowerCase().endsWith(".csv");
 
-                    return (
-                      <div
-                        key={index}
-                        className="border p-2 rounded flex flex-col gap-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs truncate max-w-[150px]">
-                            {file.name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="text-red-500"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        {isImage && (
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
-                            className="max-h-40 w-full object-cover rounded border"
-                          />
-                        )}
-
-                        {isPDF && (
-                          <iframe
-                            src={URL.createObjectURL(file)}
-                            className="w-full h-40 border rounded"
-                            title={file.name}
-                          />
-                        )}
-
-                        {isCSV && (
-                          <div className="p-2 bg-gray-100 rounded text-xs">
-                            CSV File: {file.name}
-                          </div>
-                        )}
+                  return (
+                    <div
+                      key={idx}
+                      className="border p-2 rounded flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs truncate max-w-[150px]">
+                          {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="text-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
+
+                      {isImage && (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="max-h-40 w-full object-cover rounded border"
+                        />
+                      )}
+
+                      {isPDF && (
+                        <iframe
+                          src={URL.createObjectURL(file)}
+                          className="w-full h-40 border rounded"
+                          title={file.name}
+                        />
+                      )}
+
+                      {isCSV && (
+                        <div className="p-2 bg-gray-100 rounded text-xs">
+                          CSV File: {file.name}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 

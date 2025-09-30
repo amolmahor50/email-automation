@@ -19,6 +19,7 @@ import {
   TypographyH3,
   TypographyP,
   TypographyMuted,
+  TypographySmall,
 } from "@/components/custom/Typography";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -85,7 +86,7 @@ const Dashboard = () => {
   const recentEmails = emails.slice(0, 5);
   const recentTemplates = templates.slice(0, 4);
 
-  console.log("dashboard recentEmails fetched---", recentEmails);
+  // console.log("dashboard recentEmails fetched---", recentEmails);
 
   return (
     <div className="space-y-6">
@@ -165,7 +166,7 @@ const Dashboard = () => {
               {recentEmails?.map((email, index) => (
                 <div
                   key={index}
-                  className="flex items-center space-x-2 md:space-x-4 p-4 bg-secondary rounded-lg"
+                  className="flex items-center space-x-2 md:space-x-4 p-2 bg-secondary rounded-lg"
                 >
                   <div
                     className={`w-3 h-3 rounded-full ${
@@ -177,12 +178,12 @@ const Dashboard = () => {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium capitalize text-gray-900 truncate">
+                    <TypographySmall className="capitalize truncate">
                       {email.subject}
-                    </div>
-                    <div className="text-sm text-gray-600 truncate">
+                    </TypographySmall>
+                    <TypographyMuted className=" truncate">
                       To: {email?.recipients?.[0].email}
-                    </div>
+                    </TypographyMuted>
                   </div>
                   <div className="grid gap-1 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
@@ -238,16 +239,16 @@ const Dashboard = () => {
                     className="flex items-center py-1 px-4 cursor-pointer justify-between mt-3 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                         <FileText className="w-4 h-4 text-purple-600" />
                       </div>
                       <div>
-                        <div className="font-medium  capitalize text-gray-900">
+                        <TypographySmall className="capitalize">
                           {template.title}
-                        </div>
-                        <div className="text-sm text-gray-600 capitalize">
+                        </TypographySmall>
+                        <TypographyMuted className="capitalize">
                           {template.category}
-                        </div>
+                        </TypographyMuted>
                       </div>
                     </div>
                     <Button variant="link">Use</Button>

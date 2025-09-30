@@ -1,47 +1,39 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 
-const uploads = require("../middleware/uploads");
-
-const {
-  validateTemplate,
-  validateObjectId,
-  validatePagination,
-  handleValidationErrors,
-} = require("../middleware/validation");
+// Memory storage for MongoDB
+const upload = multer({ storage: multer.memoryStorage() });
 
 const {
+  defaultAttachmentsFiles,
   getTemplates,
   getTemplate,
   createTemplate,
   updateTemplate,
   deleteTemplate,
-  getPopularTemplates,
-  searchTemplates,
-  useTemplate,
 } = require("../controllers/templateController");
+
+const {
+  validateTemplate,
+  validateObjectId,
+  validatePagination,
+} = require("../middleware/validation");
 
 // Template routes
 router.get("/", validatePagination, getTemplates);
-router.get("/popular", getPopularTemplates);
-router.get("/search", searchTemplates);
 router.get("/:id", validateObjectId("id"), getTemplate);
 
-//  use uploads.array("attachments") before validateTemplate
-router.post(
-  "/",
-  uploads.array("attachments"),
-  validateTemplate,
-  createTemplate
-);
+// Download attachment
+router.get("/:templateId/attachment/:fileId", defaultAttachmentsFiles);
+
+router.post("/", upload.array("attachments"), validateTemplate, createTemplate);
 router.put(
   "/:id",
-  uploads.array("attachments"),
+  upload.array("attachments"),
   validateTemplate,
   updateTemplate
 );
-
 router.delete("/:id", validateObjectId("id"), deleteTemplate);
-router.post("/:id/use", validateObjectId("id"), useTemplate);
 
 module.exports = router;

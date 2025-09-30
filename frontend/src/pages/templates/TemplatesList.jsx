@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FileText,
   Plus,
@@ -99,8 +99,6 @@ export default function TemplatesList() {
     );
   }
 
-  console.log("filterData", filteredTemplates);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -155,22 +153,27 @@ export default function TemplatesList() {
           <Card key={template._id} className="flex flex-col gap-4 p-4">
             <CardHeader className="flex flex-row p-0 items-start justify-between space-y-0">
               <div>
-                <TypographyH4 className="flex capitalize items-center gap-2">
-                  {template.title}
-                  {template.visibility === "global" ? (
-                    <>
-                      <Globe className="w-4 h-4 text-green-500" />
-                      <span className="text-xs text-gray-500">
-                        by{" "}
-                        {template.ownerId?.name ||
-                          template.ownerId ||
-                          "Unknown"}
-                      </span>
-                    </>
-                  ) : (
-                    <Lock className="w-4 h-4 text-gray-400" />
-                  )}
-                </TypographyH4>
+                <Link
+                  to={`/templates/${template._id}/edit`}
+                  className="hover:text-primary hover:underline underline-offset-4 mb-3"
+                >
+                  <TypographyH4 className="flex capitalize items-center gap-2">
+                    {template.title}
+                    {template.visibility === "global" ? (
+                      <>
+                        <Globe className="w-4 h-4 text-green-500" />
+                        <span className="text-xs text-gray-500">
+                          by{" "}
+                          {template.ownerId?.name ||
+                            template.ownerId ||
+                            "Unknown"}
+                        </span>
+                      </>
+                    ) : (
+                      <Lock className="w-4 h-4 text-gray-400" />
+                    )}
+                  </TypographyH4>
+                </Link>
                 <span className="capitalize text-sm bg-blue-300 mt-2 rounded-full px-3 w-fit">
                   {template.category}
                 </span>
