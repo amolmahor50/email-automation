@@ -6,8 +6,9 @@ import Layout from "@/view/layout/Layout";
 import Landing from "@/view/landing/Landing";
 import AuthLayout from "@/view/auth/AuthLayout";
 import Dashboard from "@/pages/Dashboard";
-import Compose from "@/pages/Compose";
-import History from "@/pages/History";
+import Compose from "@/pages/emails/Compose";
+import EditEmail from "@/pages/emails/EditEmail";
+import History from "@/pages/emails/History";
 import TemplatesList from "@/pages/templates/TemplatesList";
 import CreateTemplate from "@/pages/templates/CreateTemplate";
 import EditTemplate from "@/pages/templates/EditTemplate";
@@ -63,6 +64,7 @@ function App() {
         <Route path="/templates/:id/edit" element={<EditTemplate />} />
         <Route path="/templates/:id/preview" element={<PreviewTemplate />} />
         <Route path="/compose" element={<Compose />} />
+        <Route path="/email/:id/edit" element={<EditEmail />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/profile" element={<Profile />} />

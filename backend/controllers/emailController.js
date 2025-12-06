@@ -4,6 +4,51 @@ const Template = require("../models/Template");
 const { sendEmailService } = require("../services/emailService");
 const { scheduleEmailJob } = require("../services/queueService");
 
+// Save as draft
+const saveDraft = async (req, res) => {
+  try {
+    const {
+      recipients,
+      cc,
+      bcc,
+      subject,
+      body,
+      templateId,
+      attachments,
+      priority,
+    } = req.body;
+
+    // Create email record with status "draft"
+    const email = new Email({
+      userId: req.user.id,
+      templateId,
+      recipients: recipients ? recipients.map((email) => ({ email })) : [],
+      cc: cc || [],
+      bcc: bcc || [],
+      subject: subject || "",
+      body: body || "",
+      attachments: attachments || [],
+      status: "draft",
+      priority: priority || "normal",
+      metadata: {
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+      },
+    });
+
+    await email.save();
+
+    res.json({
+      success: true,
+      message: "Draft saved successfully",
+      emailId: email._id,
+    });
+  } catch (error) {
+    console.error("Save draft error:", error);
+    res.status(500).json({ message: "Failed to save draft" });
+  }
+};
+
 // Send email
 const sendEmail = async (req, res) => {
   try {
@@ -393,57 +438,47 @@ const cancelScheduledEmail = async (req, res) => {
 // Resend email
 const resendEmail = async (req, res) => {
   try {
-    const originalEmail = await Email.findOne({
+    const email = await Email.findOne({
       _id: req.params.id,
       userId: req.user.id,
     });
 
-    if (!originalEmail) {
+    if (!email) {
       return res.status(404).json({ message: "Email not found" });
     }
 
-    // Create new email record
-    const email = new Email({
-      userId: req.user.id,
-      templateId: originalEmail.templateId,
-      recipients: originalEmail.recipients,
-      cc: originalEmail.cc,
-      bcc: originalEmail.bcc,
-      subject: originalEmail.subject,
-      body: originalEmail.body,
-      attachments: originalEmail.attachments,
-      status: "sending",
-      metadata: {
-        ipAddress: req.ip,
-        userAgent: req.get("User-Agent"),
-        originalEmailId: originalEmail._id,
-      },
-    });
-
+    // Update status to "sending" before resending
+    email.status = "sent";
     await email.save();
 
-    // Send email
     try {
       const result = await sendEmailService({
-        to: originalEmail.recipients.map((r) => r.email),
-        cc: originalEmail.cc.map((r) => r.email),
-        bcc: originalEmail.bcc.map((r) => r.email),
-        subject: originalEmail.subject,
-        html: originalEmail.body,
-        attachments: originalEmail.attachments,
+        to: email.recipients.map((r) => r.email),
+        cc: email.cc.map((r) => r.email),
+        bcc: email.bcc.map((r) => r.email),
+        subject: email.subject,
+        html: email.body,
+        attachments: email.attachments,
       });
 
+      // Mark email as sent
       await email.markAsSent(result.messageId, result.providerMessageId);
+
+      // Update user email count
       await req.user.incrementEmailCount();
 
       res.json({
         success: true,
         message: "Email resent successfully",
         emailId: email._id,
+        status: email.status,
       });
     } catch (sendError) {
       await email.markAsFailed(sendError.message);
-      throw sendError;
+      res.status(500).json({
+        success: false,
+        message: "Failed to resend email",
+      });
     }
   } catch (error) {
     console.error("Resend email error:", error);
@@ -452,6 +487,7 @@ const resendEmail = async (req, res) => {
 };
 
 module.exports = {
+  saveDraft,
   sendEmail,
   scheduleEmail,
   sendBulkEmail,

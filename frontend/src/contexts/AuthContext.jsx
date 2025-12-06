@@ -71,32 +71,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Signup function
-  const signup = async (name, email, password) => {
-    setIsLoading(true);
-    try {
-      const { user: userData } = await authService.signup({
-        name,
-        email,
-        password,
-      });
-      setUser(userData);
-      localStorage.setItem(
-        AuthLocalStorage.USER_REGISTER,
-        JSON.stringify(userData)
-      );
-      localStorage.setItem(AuthLocalStorage.TOKEN, userData.token);
-
-      navigate(userData.role === "admin" ? "/admin" : "/dashboard");
-
-      return userData;
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Logout function
   const logout = async () => {
     setIsLoading(true);
@@ -116,31 +90,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Update user profile
-  const updateProfile = (updates) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        profile: { ...user.profile, ...updates },
-      };
-      setUser(updatedUser);
-      localStorage.setItem(
-        AuthLocalStorage.USER_REGISTER,
-        JSON.stringify(updatedUser)
-      );
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         step,
         setStep,
         login,
         logout,
-        signup,
-        updateProfile,
         isLoading,
         setIsLoading,
       }}

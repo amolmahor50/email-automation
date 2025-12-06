@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthSocial from "@/sections/AuthSocial";
 import { AuthSteps } from "@/app/enum";
+import { authService } from "@/services/authService";
 
 // --- Validation Helper ---
 const validateForm = (values) => {
@@ -47,7 +48,7 @@ const validateForm = (values) => {
 export function RegisterForm() {
   const navigate = useNavigate();
 
-  const { setStep, signup, loading, setLoading } = useAuth();
+  const { setStep, signup, isLoading, setUser, setIsLoading } = useAuth();
 
   const [values, setValues] = useState({
     name: "",
@@ -86,25 +87,31 @@ export function RegisterForm() {
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
+
+    const data = {
+      name: values.name,
+      email: values.email,
+      password: values.password,
+    };
 
     try {
-      const user = await signup(
-        formData.name,
-        formData.email,
-        formData.password
-      );
+      const userData = await authService.signup(data);
+      console.log(userData);
 
-      console.log("register user ->", user);
+      setUser(userData);
 
-      // toast.success("Account created successfully!");
-      navigate("/dashboard");
-    } catch (err) {
+      navigate(userData.role === "admin" ? "/admin" : "/dashboard");
+
+      return userData;
+    } catch (error) {
       const errorMessage =
         err.response?.data?.message ||
         "Failed to create account. Please try again.";
       // setError(errorMessage);
       console.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -226,8 +233,8 @@ export function RegisterForm() {
           )}
 
           {/* Submit */}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending OTP..." : "Continue"}
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Sending OTP..." : "Continue"}
           </Button>
         </div>
 

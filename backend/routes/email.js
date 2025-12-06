@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   validateEmail,
@@ -6,11 +6,12 @@ const {
   validateObjectId,
   validatePagination,
   validateDateRange,
-  handleValidationErrors
-} = require('../middleware/validation');
-const { checkEmailLimit, requirePlan } = require('../middleware/auth');
+  handleValidationErrors,
+} = require("../middleware/validation");
+const { checkEmailLimit, requirePlan } = require("../middleware/auth");
 const {
   sendEmail,
+  saveDraft,
   scheduleEmail,
   sendBulkEmail,
   getEmails,
@@ -19,33 +20,41 @@ const {
   trackEmailOpen,
   trackEmailClick,
   cancelScheduledEmail,
-  resendEmail
-} = require('../controllers/emailController');
+  resendEmail,
+} = require("../controllers/emailController");
 
 // Email routes
-router.post('/send', validateEmail, checkEmailLimit, sendEmail);
-router.post('/schedule', 
-  validateEmail, 
-  requirePlan(['pro', 'business']), 
-  checkEmailLimit, 
+router.post("/send", validateEmail, checkEmailLimit, sendEmail);
+router.post("/draft", validateEmail, saveDraft);
+router.post(
+  "/schedule",
+  validateEmail,
+  requirePlan(["pro", "business"]),
+  checkEmailLimit,
   scheduleEmail
 );
-router.post('/bulk', 
-  validateBulkEmail, 
-  requirePlan(['business']), 
+router.post(
+  "/bulk",
+  validateBulkEmail,
+  requirePlan(["business"]),
   sendBulkEmail
 );
 
-router.get('/', validatePagination, getEmails);
-router.get('/analytics', validateDateRange, getEmailAnalytics);
-router.get('/:id', validateObjectId('id'), getEmail);
+router.get("/", validatePagination, getEmails);
+router.get("/analytics", validateDateRange, getEmailAnalytics);
+router.get("/:id", validateObjectId("id"), getEmail);
 
 // Email tracking
-router.get('/track/open/:id', trackEmailOpen);
-router.get('/track/click/:id', trackEmailClick);
+router.get("/track/open/:id", trackEmailOpen);
+router.get("/track/click/:id", trackEmailClick);
 
 // Email management
-router.post('/:id/cancel', validateObjectId('id'), cancelScheduledEmail);
-router.post('/:id/resend', validateObjectId('id'), checkEmailLimit, resendEmail);
+router.post("/:id/cancel", validateObjectId("id"), cancelScheduledEmail);
+router.post(
+  "/:id/resend",
+  validateObjectId("id"),
+  checkEmailLimit,
+  resendEmail
+);
 
 module.exports = router;

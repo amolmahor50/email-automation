@@ -11,6 +11,8 @@ import {
   Eye,
   MoreHorizontal,
   X,
+  Send,
+  DraftingCompass,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "react-hot-toast";
@@ -43,9 +45,12 @@ import {
   TypographyH2,
   TypographyH3,
 } from "@/components/custom/Typography";
+import { useNavigate } from "react-router-dom";
 
 const History = () => {
-  const { emails, loadEmails, loading } = useApp();
+  const navigate = useNavigate();
+
+  const { emails, loadEmails, loading, resendEmail, setLoading } = useApp();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
@@ -111,28 +116,26 @@ const History = () => {
     }
   };
 
-  const handleView = (email) => {
-    toast.success(`Viewing email: ${email.subject}`);
-    // open modal or navigate to detail page
-  };
-
-  const handleResend = (email) => {
-    toast.success(`Resent email: ${email.subject}`);
-    // call API for resend
-  };
-
-  const handleDelete = (email) => {
-    toast.error(`Deleted email: ${email.subject}`);
-    // call API for delete
+  const handleResend = async (id) => {
+    try {
+      setLoading(true);
+      await resendEmail(id);
+      toast.success("Email resent successfully");
+      setLoading(false);
+    } catch (err) {
+      toast.error("Failed to resend email");
+    }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
       </div>
     );
   }
+
+  console.log(emails);
 
   return (
     <div className="space-y-6">
@@ -180,11 +183,11 @@ const History = () => {
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <Card className="md:p-4">
           <div className="flex items-center gap-4">
-            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-green-300">
-              <CheckCircle2 size={22} />
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-green-300">
+              <CheckCircle2 size={18} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Sent</p>
@@ -195,10 +198,10 @@ const History = () => {
           </div>
         </Card>
 
-        <Card>
+        <Card className="md:p-4">
           <div className="flex items-center gap-4">
-            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-red-300">
-              <X size={22} />
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-red-300">
+              <X size={18} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Failed</p>
@@ -208,10 +211,25 @@ const History = () => {
             </div>
           </div>
         </Card>
-        <Card>
+
+        <Card className="md:p-4">
           <div className="flex items-center gap-4">
-            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-blue-300">
-              <Eye size={22} />
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-gray-300">
+              <DraftingCompass size={18} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Draft</p>
+              <TypographyH1>
+                {emails.filter((e) => e.status === "draft").length}
+              </TypographyH1>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="md:p-4">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-blue-300">
+              <Eye size={18} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Opens</p>
@@ -222,10 +240,10 @@ const History = () => {
           </div>
         </Card>
 
-        <Card>
+        <Card className="md:p-4">
           <div className="flex items-center gap-4">
-            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-purple-300">
-              <TrendingUp size={22} />
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-purple-300">
+              <TrendingUp size={18} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Clicks</p>
@@ -236,10 +254,10 @@ const History = () => {
           </div>
         </Card>
 
-        <Card>
+        <Card className="md:p-4">
           <div className="flex items-center gap-4">
-            <div className="w-13 h-13 flex text-gray-800 justify-center items-center rounded-full bg-orange-300">
-              <Clock size={22} />
+            <div className="w-11 h-11 flex text-gray-800 justify-center items-center rounded-full bg-orange-300">
+              <Clock size={18} />
             </div>
             <div>
               <p className="text-sm text-gray-600">Scheduled</p>
@@ -266,8 +284,8 @@ const History = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredEmails.map((email) => (
-              <TableRow key={email.id}>
+            {filteredEmails.map((email, index) => (
+              <TableRow key={email.id || index}>
                 <TableCell className="max-w-xs truncate">
                   <div className="font-medium">{email.subject}</div>
                   <div className="text-sm text-gray-500 truncate">
@@ -312,17 +330,15 @@ const History = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleView(email)}>
-                        View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleResend(email)}>
-                        Resend
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/email/${email._id}/edit`)}
+                      >
+                        <Eye /> View
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => handleDelete(email)}
+                        onClick={() => handleResend(email?._id)}
                       >
-                        Delete
+                        <Send /> Resend
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

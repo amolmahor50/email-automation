@@ -26,11 +26,13 @@ import {
 import Icon from "@/components/custom/Icon";
 
 const Compose = () => {
-  const { templates, sendEmail, scheduleEmail, loadTemplates } = useApp();
+  const { templates, sendEmail, scheduleEmail, loadTemplates, saveDraft } =
+    useApp();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [emailData, setEmailData] = useState({
+    from: "",
     recipients: "",
     cc: "",
     subject: "",
@@ -51,18 +53,13 @@ const Compose = () => {
 
   // Auto-insert signature
   useEffect(() => {
-    if (
-      user?.profile?.signature &&
-      !emailData.body.includes(user.profile.signature)
-    ) {
+    if (user?.email && !emailData.from.includes(user.email)) {
       setEmailData((prev) => ({
         ...prev,
-        body: prev.body
-          ? prev.body + "\n\n" + user.profile.signature
-          : user.profile?.signature || "",
+        from: prev.from,
       }));
     }
-  }, [user?.profile?.signature]);
+  }, [user?.email]);
 
   const handleTemplateSelect = (templateId) => {
     const template = templates.find((t) => t.id === templateId);
@@ -95,6 +92,30 @@ const Compose = () => {
       toast.error("Failed to send email");
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      if (!emailData.subject && !emailData.body && !emailData.recipients) {
+        toast.error("Cannot save empty draft");
+        return;
+      }
+
+      await saveDraft({
+        recipients: emailData.recipients.split(",").map((r) => r.trim()),
+        cc: emailData.cc ? emailData.cc.split(",").map((r) => r.trim()) : [],
+        subject: emailData.subject,
+        body: emailData.body,
+        templateId: selectedTemplate || undefined,
+        attachments: emailData.attachments,
+      });
+
+      navigate("/history");
+
+      toast.success("Draft saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save draft");
     }
   };
 
@@ -150,7 +171,7 @@ const Compose = () => {
             <Icon name="Eye" size={20} />
             Preview
           </Button>
-          <Button>
+          <Button onClick={handleSaveDraft}>
             <Icon name="Save" size={20} />
             Save Draft
           </Button>

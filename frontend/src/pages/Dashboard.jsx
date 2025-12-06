@@ -35,6 +35,8 @@ const Dashboard = () => {
     { immediate: true }
   );
 
+  console.log(userStats);
+
   useEffect(() => {
     loadEmails();
     loadTemplates();
@@ -86,7 +88,7 @@ const Dashboard = () => {
   const recentEmails = emails.slice(0, 5);
   const recentTemplates = templates.slice(0, 4);
 
-  // console.log("dashboard recentEmails fetched---", recentEmails);
+  console.log("dashboard recentEmails fetched---", recentEmails);
 
   return (
     <div className="space-y-6">
@@ -104,7 +106,7 @@ const Dashboard = () => {
             <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
               <div className="text-sm text-blue-100">Current Plan</div>
               <div className="font-semibold capitalize">
-                {user?.subscription.plan}
+                {user?.subscription?.plan}
               </div>
             </div>
           </div>
